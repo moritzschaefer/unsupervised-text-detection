@@ -5,6 +5,7 @@ Implementation of the paper "Text Detection and Character Recognition in Scene I
 
 ## test-set downloader
 This module basically just contains URLs and a script for downloading the necessary images
+- not used but possible: http://www.robots.ox.ac.uk/~vgg/data/text/
 
 ## patch extractor
 Extracts all patches used for training

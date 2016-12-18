@@ -6,25 +6,22 @@ import os
 import math
 from uuid import uuid4
 from preprocessing import preprocess
-
-DATASET_PATH = '/home/moritz/MLProject/data/msra-td500'
-PATCH_PATH = '/home/moritz/MLProject/data/patches'
-NUM_PATCHES_PER_TEXT = 1
+import config
 
 
 def load_metadata():
-    image_files = glob.glob(os.path.join(DATASET_PATH, '*.JPG'))
+    image_files = glob.glob(os.path.join(config.DATASET_PATH, '*.JPG'))
     dfs = []
     for f in image_files:
         filename = os.path.splitext(os.path.split(f)[1])[0]
         try:
+            names = ['patch_number', 'difficult', 'x', 'y', 'w', 'h', 'angle']
+            dtype = [np.int, np.bool, np.int, np.int, np.int, np.int, np.float]
             tmp_df = pd.read_csv(f[:-3] + 'gt',
                                  delimiter=' ',
                                  header=None,
-                                 names=['patch_number',
-                                        'difficult',
-                                        'x', 'y', 'w', 'h',
-                                        'angle'])
+                                 names=names,
+                                 dtype={n: t for n, t in zip(names, dtype)})
         except:
             print('{} contains no text'.format(filename))
             continue
@@ -38,7 +35,7 @@ def extract_patch(row, apply_preprocessing=True):
     Return a horizontal random 8 by 8 patch
     '''
     # load image
-    img = cv2.imread(os.path.join(DATASET_PATH, row.filename + '.JPG'))
+    img = cv2.imread(os.path.join(config.DATASET_PATH, row.filename + '.JPG'))
     rows, cols, dim = img.shape
 
     # rotate image to get horizontal
@@ -51,7 +48,7 @@ def extract_patch(row, apply_preprocessing=True):
     text_img = rotated_img[row.y:row.y+row.h, row.x:row.x+row.w]
 
     # extract random patches
-    for _ in range(NUM_PATCHES_PER_TEXT):
+    for _ in range(config.NUM_PATCHES_PER_TEXT):
         try:
             x, y = np.random.randint(0, row.w-8), np.random.randint(0, row.h-8)
         except ValueError:
@@ -61,7 +58,7 @@ def extract_patch(row, apply_preprocessing=True):
             patch = preprocess(patch)
 
         # save to file
-        cv2.imwrite('{}/{}.png'.format(PATCH_PATH, uuid4()), patch)
+        cv2.imwrite('{}/{}.png'.format(config.PATCH_PATH, uuid4()), patch)
 
 if __name__ == "__main__":
     df = load_metadata()

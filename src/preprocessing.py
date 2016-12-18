@@ -2,14 +2,19 @@ import cv2
 import numpy as np
 
 def normalized(img):
-    return (img-np.mean(img))/float(np.std(img))
+    std = np.std(img)
+    if std == 0:
+        std = 1.0
+
+    return (img-np.mean(img))/std
+
 
 def zca(X):
-    sigma = np.cov(X, rowvar=True) # Correlation matrix
-    U,S,V = np.linalg.svd(sigma)# Singular Value Decomposition. X = U * np.diag(S) * V
-    epsilon = 0.1 # Whitening constant: prevents division by ezero
+    sigma = np.cov(X, rowvar=True)  # Correlation matrix
+    U, S, V = np.linalg.svd(sigma)  # Singular Value Decomposition. X = U * np.diag(S) * V
+    epsilon = 0.1  # Whitening constant: prevents division by ezero
     ZCAMatrix = np.dot(U, np.dot(np.diag(1.0/np.sqrt(S + epsilon)), U.T))     # ZCA Whitening matrix: U * Lambda * U'
-    return np.dot(ZCAMatrix,X) #Data whitening
+    return np.dot(ZCAMatrix, X)  # Data whitening
 
 def preprocess(img):
     """

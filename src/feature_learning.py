@@ -26,8 +26,7 @@ def read_files():
 
 def init_dictionary():
     D = np.random.rand(64, config.NUM_D)
-    D**2
-    D /= np.sum(D**2, axis=0)
+    D /= np.sqrt(np.sum(D**2, axis=0))
     return D
 
 
@@ -51,17 +50,21 @@ def average_clusters(X, assignments, magnitudes):
         D[:, assignments[i]] += x * magnitudes[i]
 
     # normalize columns
-    D /= np.sum(D**2, axis=0)
+    D /= np.sqrt(np.sum(D**2, axis=0))
 
     return D
 
 
 def calc_objective(X, D, assignments, magnitudes):
+
+    # THIS DOESN'T WORK (L1 norms squared summed)
     # 1. differences of clusters to Xes
     # 2. L1-norm for each datapoint
     # 3. square the norms
     # 4. sum the squares
-    return np.sum((np.sum((D[:, assignments] * magnitudes) - X, axis=0))**2)
+
+    # L2 norm sums work!
+    return np.sum((np.sum(((D[:, assignments] * magnitudes) - X)**2, axis=0)))
 
 
 def optimize_dictionary(save=True):

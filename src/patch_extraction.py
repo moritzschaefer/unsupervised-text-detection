@@ -58,8 +58,14 @@ def extract_patch(row, apply_preprocessing=True):
             patch = preprocess(patch)
 
         # save to file
-        cv2.imwrite('{}/{}.png'.format(config.PATCH_PATH, uuid4()), patch)
+
+        cv2.imwrite(os.path.join(config.PATCH_PATH, '{}.png'.format(uuid4())),
+                    patch)
 
 if __name__ == "__main__":
+    try:
+        os.mkdir(config.PATCH_PATH)
+    except FileExistsError:
+        pass
     df = load_metadata()
     df.apply(extract_patch, axis=1)

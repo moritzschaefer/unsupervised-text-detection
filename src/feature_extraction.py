@@ -111,12 +111,7 @@ def get_features_for_all_imgs(dictionary):
     print('features for {} images created.'.format(len(image_folders)))
 
 
-
 if __name__ == "__main__":
-    try:
-        os.mkdir(config.WINDOW_PATH)
-    except FileExistsError:
-        pass
     extract_all_windows(32, (32, 32))
     D = np.load(config.DICT_PATH)
     get_features_for_all_imgs(D)

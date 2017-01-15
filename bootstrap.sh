@@ -1,17 +1,34 @@
 #!/bin/bash
 set -e
-echo "This script unpacks data and runs everything"
+echo "This script downloads/unpacks data and runs everything"
 
 mkdir -p data
 cd data
-if [ ! -f msra.tar.bz2 ]; then
-  echo "msra.tar.bz2 missing. Please download it (see WhatsApp) and move it to data/"
-  exit 1
-fi
-tar -xjvf msra.tar.bz2
+
+mkdir -p patches
+mkdir -p windows
+
+echo "download necessary data files"
+
+curl "http://www.iapr-tc11.org/dataset/ICDAR2003_RobustReading/TrialTrain/word.zip" -o "word.zip"
+unzip word.zip
+rm word.zip
+clear
+
+curl "http://www.iapr-tc11.org/dataset/ICDAR2003_RobustReading/TrialTrain/scene.zip" -o "scene.zip"
+unzip scene.zip
+rm scene.zip
+clear
+
 cd ../src
-echo "Creating training patches"
-python3 patch_extraction.py
-echo "Done; Learning features"
+
+echo "extracting random word patches for training"
+python3 randomPatch_extraction.py
+
+echo "learning feature dictionary"
 python3 feature_learning.py
-echo "Dictionary created. See config.py for directory information"
+
+echo "expanding feature representation to every scenery image"
+python3 feature_extraction.py
+
+echo "finished feature extraction"

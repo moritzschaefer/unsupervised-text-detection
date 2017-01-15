@@ -26,8 +26,4 @@ def extract_random_patches(numPatches_perImg):
     print('finished random patch extraction.')
 
 if __name__ == "__main__":
-    try:
-        os.mkdir(config.PATCH_PATH)
-    except FileExistsError:
-        pass
     extract_random_patches(config.NUM_PATCHES_PER_TEXT)

@@ -8,6 +8,13 @@ cd data
 mkdir -p patches
 mkdir -p windows
 
+cd windows
+
+mkdir -p true
+mkdir -p false
+
+cd ..
+
 echo "download necessary data files"
 
 curl "http://www.iapr-tc11.org/dataset/ICDAR2003_RobustReading/TrialTrain/word.zip" -o "word.zip"
@@ -22,13 +29,5 @@ clear
 
 cd ../src
 
-echo "extracting random word patches for training"
-python3 randomPatch_extraction.py
-
-echo "learning feature dictionary"
-python3 feature_learning.py
-
-echo "expanding feature representation to every scenery image"
-python3 feature_extraction.py
-
-echo "finished feature extraction"
+echo "run training module"
+python3 main.py

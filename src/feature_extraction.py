@@ -1,3 +1,5 @@
+"""feature extraction for windows"""
+
 import numpy as np
 import pandas as pd
 import cv2
@@ -67,16 +69,20 @@ def get_features_for_window(dictionary, windowpath):
     """
 
     img = cv2.imread(windowpath)
+
+    if (img == None or np.array(img).shape != (32, 32, 3)):
+        return (False, np.array(img).shape)
+
     z = []
 
     stepSize = 1
     windowSize = (8, 8)
 
-    for y in range(0, img.shape[0] - 7, stepSize):
+    for y in range(0, img.shape[1] - 7, stepSize):
 
         row = []
 
-        for x in range(0, img.shape[1] - 7, stepSize):
+        for x in range(0, img.shape[0] - 7, stepSize):
             # yield the current window
             patch = img[y:y + windowSize[1], x:x + windowSize[0]]
 
@@ -89,29 +95,36 @@ def get_features_for_window(dictionary, windowpath):
         #push row to z
         z.append(row)
 
+    z = np.array(z)
+
+    if z.shape != (25, 25, config.NUM_D):
+        return (False, z.shape)
+
     #drop most outer lines
     z = np.array(z)[0:-1, 0:-1]
 
     #pooling
     pooled = get_pooling(z, 8, (8, 8))
 
-    return pooled
+    return (True, pooled)
 
 
-def get_features_for_all_imgs(dictionary):
-    image_folders = glob.glob(os.path.join(config.WINDOW_PATH, '*'))
-    print('creating features for {} images.'.format(len(image_folders)))
-    for i, image in enumerate(image_folders):
-        window_files = glob.glob(os.path.join(image, '*.JPG'))
-        for windowpath in window_files:
-            windowname = os.path.splitext(os.path.split(windowpath)[1])[0]
-            features = get_features_for_window(dictionary, windowpath)
-            np.save(windowpath[:-4], features)
-        print('image {} finished'.format(i + 1))
-    print('features for {} images created.'.format(len(image_folders)))
+def create_features_for_all_windows(path, dictionary):
 
+    window_files = glob.glob(os.path.join(path, '*.JPG'))
+    print('creating features for {} windows.'.format(len(window_files)))
+    counter = 0
 
-if __name__ == "__main__":
-    extract_all_windows(32, (32, 32))
-    D = np.load(config.DICT_PATH)
-    get_features_for_all_imgs(D)
+    for i, window in enumerate(window_files):
+        windowname = os.path.splitext(os.path.split(window)[1])[0]
+        features = get_features_for_window(dictionary, window)
+        if features[0]:
+            np.save(window[:-4], features[1])
+        else:
+            counter += 1
+
+        #if (i + 1)% 100 == 0:
+            #print('window {} finished'.format(i + 1))
+            #print('{} malformed windows'.format(counter))
+
+    print('finished feature extraction. {} malformed windows'.format(counter))

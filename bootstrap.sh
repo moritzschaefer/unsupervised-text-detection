@@ -6,14 +6,8 @@ mkdir -p data
 cd data
 
 mkdir -p patches
-mkdir -p windows
-
-cd windows
-
-mkdir -p true
-mkdir -p false
-
-cd ..
+mkdir -p windows/true
+mkdir -p windows/false
 
 echo "download necessary data files"
 
@@ -26,6 +20,16 @@ curl "http://www.iapr-tc11.org/dataset/ICDAR2003_RobustReading/TrialTrain/scene.
 unzip scene.zip
 rm scene.zip
 clear
+
+
+if [ ! -f character_icdar_train.zip ]; then
+  wget -O character_icdar_train.zip http://www.iapr-tc11.org/dataset/ICDAR2003_RobustReading/TrialTrain/char.zip
+  wget -O character_icdar_test.zip http://www.iapr-tc11.org/dataset/ICDAR2003_RobustReading/TrialTest/char.zip
+  mkdir -p character_icdar_train
+  mkdir -p character_icdar_test
+  unzip -d character_icdar_train character_icdar_train.zip
+  unzip -d character_icdar_test character_icdar_test.zip
+fi
 
 cd ../src
 

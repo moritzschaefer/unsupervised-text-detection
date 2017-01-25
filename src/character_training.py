@@ -33,8 +33,12 @@ def square_patches(path, target):
             else:
                 interpolation = cv2.INTER_AREA
 
-            resized = cv2.resize(img, None, fx=scale, fy=scale,
-                                 interpolation=interpolation)
+            try:
+                resized = cv2.resize(img, None, fx=scale, fy=scale,
+                                     interpolation=interpolation)
+            except Exception as e:
+                logging.warning('Error squaring patch: {}'.format(e))
+                continue
 
             # copy into target_img
             target_img[:, :, :] = 0
@@ -44,7 +48,7 @@ def square_patches(path, target):
                        x_start:x_start+resized.shape[1],
                        :] = resized
 
-            # TODO use np.newaxis to resize input arrays.. or use a for loop
+            # extend the empty areas at the sides with the
             if y_start > 0:
                 target_img[0:y_start, :, :] = resized[0, :, :][np.newaxis, :, :]
                 target_img[y_start+resized.shape[0]:, :, :] = \
@@ -68,10 +72,17 @@ def create_data_set(dir, labels, dictionary):
     features = []
     for child in tree.getroot():
         filename = child.attrib['file']
-        labels.append(child.attrib['tag'])
-        extracted_features = extract_feature_vector(os.path.join(dir, filename),
-                                                    dictionary)
-        features.append(extracted_features[1].flatten())
+        try:
+            extracted_features = extract_feature_vector(os.path.join(dir,
+                                                                     filename),
+                                                        dictionary)
+        except Exception as e:
+            import ipdb
+            ipdb.set_trace()
+            logging.warn('Could not find file {}. Skip')
+        else:
+            labels.append(child.attrib['tag'])
+            features.append(extracted_features[1].flatten())
 
     # np.savetxt(FEATURE_FILE, np.array(features))
     # with open(LABEL_FILE, 'w') as f:
@@ -115,14 +126,11 @@ def load_model():
 def _save_model(model):
     with open(config.CHARACTER_MODEL_PATH, 'wb') as f:
         pickle.dump(model, f)
-    print('Model saved in {}', config.CHARACTER_MODEL_PATH)
+    logging.info('Model saved in {}'.format(config.CHARACTER_MODEL_PATH))
 
 
-if __name__ == "__main__":
-    dictionary = np.load(config.DICT_PATH)
-
+def train_model():
     # create training set and fit model
-
     square_patches(os.path.join(config.DATA_DIR, 'character_icdar_train/'),
                    os.path.join(config.DATA_DIR,
                                 'character_icdar_train/extracted/'))
@@ -132,30 +140,48 @@ if __name__ == "__main__":
         dictionary)
     logging.info('Created training data set. Now training SVM')
     model = train_character_svm(features, labels)
-    logging.info('Trained SVM. Saving Model')
+    logging.info('Trained model')
+    return model
 
-    _save_model(model)
-    logging.info('Model saved')
 
-    label_set = np.unique(labels)
+if __name__ == "__main__":
 
-    # now apply the test set
-    square_patches(
-        os.path.join(config.DATA_DIR, 'character_icdar_test'),
-        os.path.join(config.DATA_DIR, 'character_icdar_test/extracted'))
-    test_features, test_labels = create_data_set(
-        os.path.join(config.DATA_DIR, 'character_icdar_test/extracted'),
-        os.path.join(config.DATA_DIR, 'character_icdar_test/char.xml'),
-        dictionary)
-    logging.info('Test data loaded. Predicting test data')
+    dictionary = np.load(config.DICT_PATH)
+    try:
+        logging.info('Trying to load model')
+        model = load_model()
+    except FileNotFoundError:  # noqa
+        logging.info('Model not found. Training model...')
+        model = train_model()
+        logging.info('Saving model')
+        _save_model(model)
 
+    try:
+        with open('test_set.pkl', 'rb') as f:
+            test_features, test_labels = pickle.load(f)
+    except FileNotFoundError:  # noqa
+        # now apply the test set
+        logging.info('Creating squared test patches')
+        square_patches(
+            os.path.join(config.DATA_DIR, 'character_icdar_test'),
+            os.path.join(config.DATA_DIR, 'character_icdar_test/extracted'))
+        logging.info('Building test data set')
+        test_features, test_labels = create_data_set(
+            os.path.join(config.DATA_DIR, 'character_icdar_test/extracted'),
+            os.path.join(config.DATA_DIR, 'character_icdar_test/char.xml'),
+            dictionary)
+        logging.info('Test data loaded. Predicting test data')
+        with open('test_set.pkl', 'wb') as f:
+            pickle.dump((test_features, test_labels), f)
+
+    label_set = np.unique(test_labels)
     predicted_labels = model.predict(test_features)
 
     c_matrix = sklearn.metrics.confusion_matrix(test_labels,
                                                 predicted_labels,
                                                 label_set)
 
-    logging.info('Printing confusion matrix')
+    logging.info('Printing confusio matrix')
     print(c_matrix)
 
     # plot
@@ -163,4 +189,6 @@ if __name__ == "__main__":
     plt.figure()
     plot_confusion_matrix(c_matrix, classes=label_set,
                           title='Confusion matrix, without normalization')
+    import ipdb
+    ipdb.set_trace()
     plt.show()

@@ -106,9 +106,11 @@ def train_character_svm(features, labels):
     model.fit(features, labels)
     return model
 
+
 def load_model():
     with open(config.CHARACTER_MODEL_PATH, 'rb') as f:
         return pickle.load(f)
+
 
 def _save_model(model):
     with open(config.CHARACTER_MODEL_PATH, 'wb') as f:
@@ -122,16 +124,15 @@ if __name__ == "__main__":
     # create training set and fit model
 
     square_patches(os.path.join(config.DATA_DIR, 'character_icdar_train/'),
-                   os.path.join(config.DATA_DIR, 'character_icdar_train/extracted/'))
-    features, labels = create_data_set(os.path.join(config.DATA_DIR,
-                                                    'character_icdar_train/extracted/'),
-                                       os.path.join(config.DATA_DIR,
-                                                    'character_icdar_train/char.xml'),
-                                       dictionary)
+                   os.path.join(config.DATA_DIR,
+                                'character_icdar_train/extracted/'))
+    features, labels = create_data_set(
+        os.path.join(config.DATA_DIR, 'character_icdar_train/extracted/'),
+        os.path.join(config.DATA_DIR, 'character_icdar_train/char.xml'),
+        dictionary)
     logging.info('Created training data set. Now training SVM')
     model = train_character_svm(features, labels)
     logging.info('Trained SVM. Saving Model')
-
 
     _save_model(model)
     logging.info('Model saved')
@@ -139,15 +140,16 @@ if __name__ == "__main__":
     label_set = np.unique(labels)
 
     # now apply the test set
-    square_patches(os.path.join(config.DATA_DIR, 'character_icdar_test'),
-                   os.path.join(config.DATA_DIR, 'character_icdar_test/extracted'))
-    test_features, test_labels = create_data_set(os.path.join(config.DATA_DIR, 'character_icdar_test/extracted'),
-                                                 os.path.join(config.DATA_DIR, 'character_icdar_test/char.xml'),
-                                                 dictionary)
+    square_patches(
+        os.path.join(config.DATA_DIR, 'character_icdar_test'),
+        os.path.join(config.DATA_DIR, 'character_icdar_test/extracted'))
+    test_features, test_labels = create_data_set(
+        os.path.join(config.DATA_DIR, 'character_icdar_test/extracted'),
+        os.path.join(config.DATA_DIR, 'character_icdar_test/char.xml'),
+        dictionary)
     logging.info('Test data loaded. Predicting test data')
 
     predicted_labels = model.predict(test_features)
-
 
     c_matrix = sklearn.metrics.confusion_matrix(test_labels,
                                                 predicted_labels,

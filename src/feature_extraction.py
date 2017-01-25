@@ -1,11 +1,9 @@
 """feature extraction for windows"""
 
 import numpy as np
-import pandas as pd
 import cv2
 import glob
 import os
-import math
 from uuid import uuid4
 from preprocessing import preprocess
 import config
@@ -56,7 +54,7 @@ def extract_all_windows(stepSize, windowSize):
 
         for y in range(0, img.shape[0], stepSize):
             for x in range(0, img.shape[1], stepSize):
-            # yield the current window
+                # yield the current window
                 window = (x, y, img[y:y + windowSize[1], x:x + windowSize[0]])
                 cv2.imwrite('{}/{}.JPG'.format(os.path.join(config.WINDOW_PATH, filename), uuid4()), window[2])
 
@@ -70,8 +68,9 @@ def get_features_for_window(dictionary, windowpath):
 
     img = cv2.imread(windowpath)
 
-    if (img == None or np.array(img).shape != (32, 32, 3)):
-        return (False, np.array(img).shape)
+    if img is None or img.shape != (32, 32, 3):
+        raise ValueError('Image doesn\'t exist or is not a 32x32 patch')
+        # return (False, np.array(img).shape)
 
     z = []
 
@@ -86,7 +85,7 @@ def get_features_for_window(dictionary, windowpath):
             # yield the current window
             patch = img[y:y + windowSize[1], x:x + windowSize[0]]
 
-            #preprocess patch
+            # preprocess patch
             patch = preprocess(patch)
 
             #get z entry for preprocessed patch

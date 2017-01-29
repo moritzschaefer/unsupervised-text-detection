@@ -30,17 +30,20 @@ def async_predict(args):
     features = feature_extraction.get_features_for_window(
         dictionary, window.astype('float32'))
     # reshape it so it contains a single sample
-    v = model.predict(features[1].flatten().reshape(1, -1))
-    return x, y, v
+    v = model.decision_function(features[1].flatten().reshape(1, -1))
+    return x, y, v[0]
+
 
 # return the value of every pixels of a image
 def get_prediction_values(img, model):
     layers = []
     for layer_img in get_all_layers(img):
         pool = Pool(processes=8)
-        values = np.ndarray(shape=[img.shape[0]-31, img.shape[1]-31], dtype='float')
+        values = np.zeros(shape=[img.shape[0]-31, img.shape[1]-31],
+                          dtype='float')
 
-        for x, y, v in pool.imap(async_predict, sliding_window(layer_img, 1), 8):
+        for x, y, v in pool.imap(async_predict, sliding_window(layer_img, 8), 8):
+            print(v)
             values[y, x] = v
 
         pool.close()
@@ -54,7 +57,7 @@ def get_prediction_values(img, model):
 def get_all_layers(img):
     for (i, resized) in enumerate(pyramid_gaussian(img,
                                                    downscale=1.3,
-                                                   max_layer=1)):  # TODO use 7
+                                                   max_layer=0)):  # TODO use 7
         # if the image is too small, break from the loop
         if resized.shape[0] < 32 or resized.shape[1] < 32:
             break
@@ -68,11 +71,9 @@ if __name__ == "__main__":
     for filename in image_files:
         img = cv2.imread(filename)
         prediction_layers = get_prediction_values(img, model)
-        import ipdb
-        ipdb.set_trace()
 
         # now draw the image
-        text_probability_image = np.zeros(img.shape, np.uint8)
+        text_probability_image = np.zeros(img.shape, float)
 
         for y in range(0, img.shape[0]):
             for x in range(0, img.shape[1]):
@@ -84,14 +85,14 @@ if __name__ == "__main__":
                     trans_x = (layer.shape[1]/img.shape[1]) * y
 
                     window = layer[max(0, trans_y-32):
-                                   min(trans_y, layer.shape[0]),
+                                   min(trans_y+1, layer.shape[0]),
                                    max(0, trans_x-32):
-                                   min(trans_x, layer.shape[1])]
+                                   min(trans_x+1, layer.shape[1])]
 
                     max_probability = max(max_probability, window.max())
 
                 text_probability_image[y, x] = max_probability
 
-                cv2.imshow("image 1", img)
-                cv2.imshow("image 2", text_probability_image)
-                cv2.waitKey(0)
+        cv2.imshow("image 1", img)
+        cv2.imshow("image 2", text_probability_image)
+        cv2.waitKey(0)

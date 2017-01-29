@@ -77,8 +77,6 @@ def create_data_set(dir, labels, dictionary):
                                                                      filename),
                                                         dictionary)
         except Exception as e:
-            import ipdb
-            ipdb.set_trace()
             logging.warn('Could not find file {}. Skip')
         else:
             labels.append(child.attrib['tag'])

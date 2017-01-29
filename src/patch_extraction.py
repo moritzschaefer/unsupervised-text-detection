@@ -10,7 +10,7 @@ import config
 
 
 def load_metadata():
-    image_files = glob.glob(os.path.join(config.DATASET_PATH, '*.JPG'))
+    image_files = glob.glob(os.path.join(config.DATASET_PATH, '*.jpg'))
     dfs = []
     for f in image_files:
         filename = os.path.splitext(os.path.split(f)[1])[0]
@@ -35,7 +35,7 @@ def extract_random_patch(row, apply_preprocessing=True):
     Return a horizontal random 8 by 8 patch
     '''
     # load image
-    img = cv2.imread(os.path.join(config.DATASET_PATH, row.filename + '.JPG'))
+    img = cv2.imread(os.path.join(config.DATASET_PATH, row.filename + '.jpg'))
     rows, cols, dim = img.shape
 
     #TODO: check if rotated image is rotated the right way

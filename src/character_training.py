@@ -79,7 +79,9 @@ def create_data_set(dir, labels, dictionary):
                                                                      filename),
                                                         dictionary)
         except Exception as e:
-            logging.warn('Could not find file {}. Skip')
+            import ipdb
+            ipdb.set_trace()
+            logging.warn('Could not find file {}. Skip'.format(filename))
         else:
             labels.append(child.attrib['tag'])
             features.append(extracted_features[1].flatten())
@@ -148,7 +150,7 @@ if __name__ == "__main__":
     try:
         logging.info('Trying to load model')
         model = load_model()
-    except FileNotFoundError:  # noqa
+    except (FileNotFoundError, Exception):  # noqa
         logging.info('Model not found. Training model...')
         model = train_model()
         logging.info('Saving model')

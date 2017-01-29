@@ -41,7 +41,7 @@ def extract_all_windows(stepSize, windowSize):
     '''
     Return all windows for given image
     '''
-    image_files = glob.glob(os.path.join(config.DATASET_PATH, '*.JPG'))
+    image_files = glob.glob(os.path.join(config.DATASET_PATH, '*.jpg'))
 
     for f in image_files:
 
@@ -56,7 +56,7 @@ def extract_all_windows(stepSize, windowSize):
             for x in range(0, img.shape[1], stepSize):
                 # yield the current window
                 window = (x, y, img[y:y + windowSize[1], x:x + windowSize[0]])
-                cv2.imwrite('{}/{}.JPG'.format(os.path.join(config.WINDOW_PATH, filename), uuid4()), window[2])
+                cv2.imwrite('{}/{}.jpg'.format(os.path.join(config.WINDOW_PATH, filename), uuid4()), window[2])
 
     print('finished window extraction.')
 
@@ -69,7 +69,7 @@ def get_features_for_window(dictionary, window):
     """
 
     if not isinstance(window, (np.ndarray, np.generic)):
-        img = cv2.imread(windowpath)
+        img = cv2.imread(window)
     else:
         img = window
 
@@ -115,7 +115,7 @@ def get_features_for_window(dictionary, window):
 
 def create_features_for_all_windows(path, dictionary):
 
-    window_files = glob.glob(os.path.join(path, '*.JPG'))
+    window_files = glob.glob(os.path.join(path, '*.jpg'))
     print('creating features for {} windows.'.format(len(window_files)))
     counter = 0
 

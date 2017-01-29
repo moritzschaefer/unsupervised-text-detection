@@ -65,8 +65,8 @@ def get_all_layers(img):
 
 if __name__ == "__main__":
     model = pickle.load(open(config.TEXT_MODEL_PATH, 'rb'))  # get model
-    # image_files = glob.glob(os.path.join(config.TEST_IMAGE_PATH, '*.JPG'))
-    image_files = [os.path.join(config.TEST_IMAGE_PATH, '111-1137_IMG.JPG')]
+    # image_files = glob.glob(os.path.join(config.TEST_IMAGE_PATH, '*.jpg'))
+    image_files = [os.path.join(config.TEST_IMAGE_PATH, '111-1137_IMG.jpg')]
 
     for filename in image_files:
         img = cv2.imread(filename)

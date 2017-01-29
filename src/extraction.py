@@ -40,7 +40,7 @@ def extract_random_patches(path, patches, rescale = False):
         x = random.randint(0, img.shape[0] - 8)
         y = random.randint(0, img.shape[1] - 8)
         patch = img[x:x+8, y:y+8]
-        cv2.imwrite('{}/{}.JPG'.format(config.PATCH_PATH, uuid4()), patch)
+        cv2.imwrite('{}/{}.jpg'.format(config.PATCH_PATH, uuid4()), patch)
 
 def count_images():
     """
@@ -51,7 +51,7 @@ def count_images():
     image_folders = glob.glob(os.path.join(config.SCENERY_PATH, '*/'))
 
     for folder in image_folders:
-        image_files = glob.glob(os.path.join(folder, '*.JPG'))
+        image_files = glob.glob(os.path.join(folder, '*.jpg'))
         c += len(image_files)
     return c
 
@@ -142,7 +142,7 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
             if plot:
                 rect = patches.Rectangle((window[0], window[1]),32,32,linewidth=1,edgecolor='r',facecolor='none')
                 ax.add_patch(rect)
-            cv2.imwrite('{}/true/{}.JPG'.format(config.WINDOW_PATH, uuid4()), window[2])
+            cv2.imwrite('{}/true/{}.jpg'.format(config.WINDOW_PATH, uuid4()), window[2])
 
     else:
 
@@ -176,7 +176,7 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
             if plot:
                 rect = patches.Rectangle((window[0], window[1]),32,32,linewidth=1,edgecolor='r',facecolor='none')
                 ax.add_patch(rect)
-            cv2.imwrite('{}/false/{}.JPG'.format(config.WINDOW_PATH, uuid4()), window[2])
+            cv2.imwrite('{}/false/{}.jpg'.format(config.WINDOW_PATH, uuid4()), window[2])
 
         if plot:
             plt.show()

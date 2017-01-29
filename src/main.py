@@ -54,7 +54,7 @@ image_folders = glob.glob(os.path.join(config.SCENERY_PATH, '*/'))
 
 for folder in image_folders:
 
-    image_files = glob.glob(os.path.join(folder, '*.JPG'))
+    image_files = glob.glob(os.path.join(folder, '*.jpg'))
     #print('images: {}'.format(len(image_files)))
 
     for f in image_files:

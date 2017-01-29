@@ -12,6 +12,8 @@ WINDOW_PATH = os.path.join(BASE_DIR, 'data/windows/')
 DICT_PATH = os.path.join(BASE_DIR, 'data/dict.npy')
 CHARACTER_MODEL_PATH = os.path.join(BASE_DIR, 'data/character_model.pkl')
 NUM_PATCHES_PER_TEXT = 30  # TODO this should be >100, for classification training purposes 30 atm
+TEXT_MODEL_PATH = os.path.join(BASE_DIR, 'data/text_model.pkl')
+TEST_IMAGE_PATH = os.path.join(BASE_DIR, 'data/test_images/')
 TOTAL_WINDOWS_FOR_TRAINING = 10000
 ALPHA = .5 #hyperparam from feature extraction #TODO tune this in crossval
 

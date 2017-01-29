@@ -110,8 +110,6 @@ def train_character_svm(features, labels):
                       random_state=None,
                       max_iter=1000)
     # check features.shape = [n_samples, n_features]
-    import ipdb
-    ipdb.set_trace()
     model.fit(features, labels)
     return model
 
@@ -187,6 +185,4 @@ if __name__ == "__main__":
     plt.figure()
     plot_confusion_matrix(c_matrix, classes=label_set,
                           title='Confusion matrix, without normalization')
-    import ipdb
-    ipdb.set_trace()
     plt.show()

@@ -23,7 +23,6 @@ for folder in image_folders:
     image_files = glob.glob(os.path.join(folder, '*.jpg'))
 
     for f in image_files:
-
         extraction.extract_random_patches(f, config.NUM_PATCHES_PER_TEXT, True)
 
 dictionary = feature_learning.optimize_dictionary()

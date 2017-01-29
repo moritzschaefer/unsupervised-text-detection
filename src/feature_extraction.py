@@ -63,12 +63,17 @@ def extract_all_windows(stepSize, windowSize):
     print('finished window extraction.')
 
 
-def get_features_for_window(dictionary, windowpath):
+def get_features_for_window(dictionary, window):
     """
+    :dictionary: np array of the dictionary
+    :window: either an np.ndarray or a filename to a window
     return feature representation for given window
     """
 
-    img = cv2.imread(windowpath)
+    if not isinstance(window, (np.ndarray, np.generic)):
+        img = cv2.imread(windowpath)
+    else:
+        img = window
 
     if (img == None or np.array(img).shape != (32, 32, 3)):
         return (False, np.array(img).shape)

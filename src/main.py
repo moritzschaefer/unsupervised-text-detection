@@ -1,7 +1,7 @@
 """
 main file to run project steps
 """
-
+"""
 ################################################
 # random patch extraction and feature learning #
 ################################################
@@ -24,15 +24,17 @@ for folder in image_folders:
 
     for f in image_files:
 
-        extraction.extract_random_patches(f, config.NUM_PATCHES_PER_TEXT)
+        extraction.extract_random_patches(f, config.NUM_PATCHES_PER_TEXT, True)
 
 dictionary = feature_learning.optimize_dictionary()
 
 print('finished random patch extraction and feature learning.')
+"""
 
 #####################
 # window extraction #
 #####################
+
 
 import xml.etree.ElementTree
 import extraction
@@ -136,11 +138,10 @@ print('finished text recognition training.')
 #################
 # loading model #
 #################
-"""
+
 import pickle
 from sklearn import svm
 
 loaded_model = pickle.load(open(filename, 'rb'))
 result = loaded_model.score(X_test, y_test)
 print(result)
-"""

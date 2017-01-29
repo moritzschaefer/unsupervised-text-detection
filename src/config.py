@@ -17,4 +17,4 @@ TEST_IMAGE_PATH = os.path.join(BASE_DIR, 'data/test_images/')
 TOTAL_WINDOWS_FOR_TRAINING = 10000
 ALPHA = .5 #hyperparam from feature extraction #TODO tune this in crossval
 
-NUM_D = 20  # number of dictionary entries
+NUM_D = 200  # number of dictionary entries

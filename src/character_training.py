@@ -17,6 +17,8 @@ import config
 logging.basicConfig(level=logging.INFO)
 
 
+# TODO to improve the training patches we could add parts of other random
+# characters at the borders to prevent overfitting
 def square_patches(path, target):
     '''
     Converts all images to 32x32 patches and moves them to the target directory
@@ -177,7 +179,7 @@ if __name__ == "__main__":
                                                 predicted_labels,
                                                 label_set)
 
-    logging.info('Printing confusio matrix')
+    logging.info('Printing confusion matrix')
     print(c_matrix)
 
     # plot

@@ -134,6 +134,7 @@ def train_model():
     square_patches(os.path.join(config.DATA_DIR, 'character_icdar_train/'),
                    os.path.join(config.DATA_DIR,
                                 'character_icdar_train/extracted/'))
+    logging.info('Created square patches. Extracting training data set')
     features, labels = create_data_set(
         os.path.join(config.DATA_DIR, 'character_icdar_train/extracted/'),
         os.path.join(config.DATA_DIR, 'character_icdar_train/char.xml'),

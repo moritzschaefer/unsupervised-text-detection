@@ -56,7 +56,9 @@ def extract_all_windows(stepSize, windowSize):
             for x in range(0, img.shape[1], stepSize):
                 # yield the current window
                 window = (x, y, img[y:y + windowSize[1], x:x + windowSize[0]])
-                cv2.imwrite('{}/{}.jpg'.format(os.path.join(config.WINDOW_PATH, filename), uuid4()), window[2])
+                cv2.imwrite('{}/{}.jpg'.format(os.path.join(config.WINDOW_PATH,
+                                                            filename),
+                                               uuid4()), window[2])
 
     print('finished window extraction.')
 
@@ -104,8 +106,8 @@ def get_features_for_window(dictionary, window):
     if z.shape != (25, 25, config.NUM_D):
         return (False, z.shape)
 
-    #drop most outer lines
-    z = np.array(z)[0:-1, 0:-1]
+    # drop most outer lines
+    z = z[0:-1, 0:-1]
 
     #pooling
     pooled = get_pooling(z, 8, (8, 8))

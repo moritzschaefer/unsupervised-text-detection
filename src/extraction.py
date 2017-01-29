@@ -25,13 +25,16 @@ def add_feature_data(windowspath, X=[]):
         X.append(np.array(w).flatten())
     return X
 
-def extract_random_patches(path, patches):
+def extract_random_patches(path, patches, rescale = False):
     '''
     Return random patches for img in path
     @TODO: Sometimes returns patches smaller than 8x8
     '''
     img = cv2.imread(path)
     img = preprocessing.preprocess(img)
+
+    if rescale:
+        img = cv2.rescale(img, (img.shape[1], 32))
 
     for i in range(patches):
         x = random.randint(0, img.shape[0] - 8)

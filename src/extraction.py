@@ -16,31 +16,26 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import preprocessing
 
-def add_feature_data(windowspath, X=[]):
-    """
-    adds feature representations from windowspath to dataset
-    """
-    for window in windowspath:
-        w = np.load(window)
-        X.append(np.array(w).flatten())
-    return X
-
 def extract_random_patches(path, patches, rescale = False):
     '''
     Return random patches for img in path
     @TODO: Sometimes returns patches smaller than 8x8
     '''
+
     img = cv2.imread(path)
-    img = preprocessing.preprocess(img)
 
     if rescale:
-        img = cv2.rescale(img, (img.shape[1], 32))
+        img = cv2.resize(img, (img.shape[1], 32))
+
+    img = preprocessing.preprocess(img)
 
     for i in range(patches):
         x = random.randint(0, img.shape[0] - 8)
         y = random.randint(0, img.shape[1] - 8)
         patch = img[x:x+8, y:y+8]
-        cv2.imwrite('{}/{}.JPG'.format(config.PATCH_PATH, uuid4()), patch)
+        #plt.imshow(patch)
+        # imwrite only able to save int images, values are floats
+        cv2.imwrite('{}/{}.jpg'.format(config.PATCH_PATH, uuid4()), patch)
 
 def count_images():
     """
@@ -103,7 +98,7 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
     img = preprocessing.preprocess(img)
 
     # check for img reading errors
-    if img == None:
+    if img is None:
         return
 
     if plot:
@@ -142,7 +137,7 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
             if plot:
                 rect = patches.Rectangle((window[0], window[1]),32,32,linewidth=1,edgecolor='r',facecolor='none')
                 ax.add_patch(rect)
-            cv2.imwrite('{}/true/{}.JPG'.format(config.WINDOW_PATH, uuid4()), window[2])
+            cv2.imwrite('{}/true/{}.jpg'.format(config.WINDOW_PATH, uuid4()), window[2])
 
     else:
 
@@ -157,6 +152,7 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
         possible_x = list(range(0, img.shape[0] - 32))
         possible_y = list(range(0, img.shape[1] - 32))
 
+        # areas with text
         restricted_x_coordinates = [item for sublist in restricted_x_coordinates for item in sublist]
         restricted_y_coordinates = [item for sublist in restricted_y_coordinates for item in sublist]
 
@@ -176,7 +172,7 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
             if plot:
                 rect = patches.Rectangle((window[0], window[1]),32,32,linewidth=1,edgecolor='r',facecolor='none')
                 ax.add_patch(rect)
-            cv2.imwrite('{}/false/{}.JPG'.format(config.WINDOW_PATH, uuid4()), window[2])
+            cv2.imwrite('{}/false/{}.jpg'.format(config.WINDOW_PATH, uuid4()), window[2])
 
         if plot:
             plt.show()

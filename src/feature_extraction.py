@@ -69,13 +69,13 @@ def get_features_for_window(dictionary, window):
     """
 
     if not isinstance(window, (np.ndarray, np.generic)):
-        img = cv2.imread(windowpath)
+        img = cv2.imread(window)
     else:
         img = window
 
     if img is None or img.shape != (32, 32, 3):
-        raise ValueError('Image doesn\'t exist or is not a 32x32 patch')
-        # return (False, np.array(img).shape)
+        #raise ValueError('Image doesn\'t exist or is not a 32x32 patch')
+        return (False, np.array(img).shape)
 
     z = []
 
@@ -132,3 +132,12 @@ def create_features_for_all_windows(path, dictionary):
             #print('{} malformed windows'.format(counter))
 
     print('finished feature extraction. {} malformed windows'.format(counter))
+
+if __name__ == "__main__":
+    D = np.load(config.DICT_PATH)
+
+    text_windows = os.path.join(config.WINDOW_PATH, 'true/')
+    ntext_windows = os.path.join(config.WINDOW_PATH, 'false/')
+
+    create_features_for_all_windows(text_windows, D)
+    create_features_for_all_windows(ntext_windows, D)

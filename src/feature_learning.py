@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 def read_files():
-    patches = glob.glob('{}/*.JPG'.format(config.PATCH_PATH))
+    patches = glob.glob('{}/*.jpg'.format(config.PATCH_PATH))
     X = np.empty((64, len(patches)))
     for i, patch in enumerate(patches):
 

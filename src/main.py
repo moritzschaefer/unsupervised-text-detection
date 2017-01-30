@@ -22,12 +22,14 @@ import text_recognition
 
 print('started random patch extraction and feature learning.')
 
-
+"""
+for f in image_files:
+    extraction.extract_random_patches(f, config.NUM_PATCHES_PER_TEXT, True)
 
 dictionary = feature_learning.optimize_dictionary()
 
 print('finished random patch extraction and feature learning.')
-
+"""
 #####################
 # window extraction #
 #####################
@@ -46,7 +48,7 @@ image_folders = glob.glob(os.path.join(config.SCENERY_PATH, '*/'))
 
 for folder in image_folders:
 
-    image_files = glob.glob(os.path.join(folder, '*.JPG'))
+    image_files = glob.glob(os.path.join(folder, '*.jpg'))
     #print('images: {}'.format(len(image_files)))
 
     for f in image_files:

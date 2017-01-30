@@ -17,6 +17,8 @@ import config
 logging.basicConfig(level=logging.INFO)
 
 
+# TODO to improve the training patches we could add parts of other random
+# characters at the borders to prevent overfitting
 def square_patches(path, target):
     '''
     Converts all images to 32x32 patches and moves them to the target directory
@@ -77,7 +79,9 @@ def create_data_set(dir, labels, dictionary):
                                                                      filename),
                                                         dictionary)
         except Exception as e:
-            logging.warn('Could not find file {}. Skip')
+            import ipdb
+            ipdb.set_trace()
+            logging.warn('Could not find file {}. Skip'.format(filename))
         else:
             labels.append(child.attrib['tag'])
             features.append(extracted_features[1].flatten())
@@ -110,8 +114,6 @@ def train_character_svm(features, labels):
                       random_state=None,
                       max_iter=1000)
     # check features.shape = [n_samples, n_features]
-    import ipdb
-    ipdb.set_trace()
     model.fit(features, labels)
     return model
 
@@ -132,6 +134,7 @@ def train_model():
     square_patches(os.path.join(config.DATA_DIR, 'character_icdar_train/'),
                    os.path.join(config.DATA_DIR,
                                 'character_icdar_train/extracted/'))
+    logging.info('Created square patches. Extracting training data set')
     features, labels = create_data_set(
         os.path.join(config.DATA_DIR, 'character_icdar_train/extracted/'),
         os.path.join(config.DATA_DIR, 'character_icdar_train/char.xml'),
@@ -148,7 +151,7 @@ if __name__ == "__main__":
     try:
         logging.info('Trying to load model')
         model = load_model()
-    except FileNotFoundError:  # noqa
+    except (FileNotFoundError, Exception):  # noqa
         logging.info('Model not found. Training model...')
         model = train_model()
         logging.info('Saving model')
@@ -179,7 +182,7 @@ if __name__ == "__main__":
                                                 predicted_labels,
                                                 label_set)
 
-    logging.info('Printing confusio matrix')
+    logging.info('Printing confusion matrix')
     print(c_matrix)
 
     # plot
@@ -187,6 +190,4 @@ if __name__ == "__main__":
     plt.figure()
     plot_confusion_matrix(c_matrix, classes=label_set,
                           title='Confusion matrix, without normalization')
-    import ipdb
-    ipdb.set_trace()
     plt.show()

@@ -7,16 +7,15 @@ import random
 import glob
 from uuid import uuid4
 import os
-import xml.etree.ElementTree
-import random
-import operator
 import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import preprocessing
 
-def extract_random_patches(path, patches, rescale = False):
+
+
+def extract_random_patches(path, patches, resize = False):
     '''
     Return random patches for img in path
     @TODO: Sometimes returns patches smaller than 8x8
@@ -24,10 +23,12 @@ def extract_random_patches(path, patches, rescale = False):
 
     img = cv2.imread(path)
 
-    if rescale:
-        img = cv2.resize(img, (img.shape[1], 32))
-
     img = preprocessing.preprocess(img)
+
+    if resize:
+        height, width = img.shape[:2]
+        img = cv2.resize(img, (int(32*width/height), 32),
+                         interpolation = cv2.INTER_AREA)
 
     for i in range(patches):
         x = random.randint(0, img.shape[0] - 8)
@@ -46,7 +47,7 @@ def count_images():
     image_folders = glob.glob(os.path.join(config.SCENERY_PATH, '*/'))
 
     for folder in image_folders:
-        image_files = glob.glob(os.path.join(folder, '*.JPG'))
+        image_files = glob.glob(os.path.join(folder, '*.jpg'))
         c += len(image_files)
     return c
 

@@ -3,6 +3,7 @@ import os
 import pickle
 import xml.etree.ElementTree as ET
 import logging
+import random
 
 import cv2
 import numpy as np
@@ -17,55 +18,86 @@ import config
 logging.basicConfig(level=logging.INFO)
 
 
-# TODO to improve the training patches we could add parts of other random
-# characters at the borders to prevent overfitting
+def square_patch(img, mode='black'):
+    '''
+    mode can be 'black', 'fill' and 'random'
+    TODO random not working cause of missing last_image
+    '''
+    target_img = np.zeros(shape=(32, 32, 3), dtype='uint8')
+    scale = 32.0/max(img.shape[:2])
+    if scale > 1:
+        interpolation = cv2.INTER_LINEAR
+    else:
+        interpolation = cv2.INTER_AREA
+
+    try:
+        resized = cv2.resize(img, None, fx=scale, fy=scale,
+                                interpolation=interpolation)
+    except Exception as e:
+        logging.warning('Error squaring patch: {}'.format(e))
+        raise
+
+
+    y_start = int((32-resized.shape[0])/2)
+    x_start = int((32-resized.shape[1])/2)
+    target_img[y_start:y_start+resized.shape[0],
+                x_start:x_start+resized.shape[1],
+                :] = resized
+
+    # extend the empty areas at top and bottom with repetition
+    if mode == 'fill':
+        if y_start > 0:
+            target_img[0:y_start, :, :] = resized[0, :, :][np.newaxis, :, :]
+            target_img[y_start+resized.shape[0]:, :, :] = \
+                resized[0, :, :][np.newaxis, :, :]
+
+    # extend the empty areas at the sides with random characters
+    if x_start > 0:
+        if mode == 'random' and last_image != None:
+            # use last character (as they are not sorted, it's OK)
+            try:
+                start_index = random.randint(0, last_image.shape[1]-x_start-1)
+            except:
+                start_index = 0
+
+            target_img[:, 0:x_start, :] = \
+                last_image[:, start_index:start_index+x_start, :]
+            missing_pixels = 32-(x_start+resized.shape[1])
+            target_img[:, x_start+resized.shape[1]:, :] = \
+                last_image[:, start_index:start_index+missing_pixels, :]
+        elif mode == 'fill':
+            target_img[:, 0:x_start, :] = \
+                resized[:, 0, :][:, np.newaxis, :]
+            target_img[:, x_start+resized.shape[1]:, :] = \
+                resized[:, 0, :][:, np.newaxis, :]
+
+    # fill characters shouldnt be too small
+    if resized.shape[0] == 32 and resized.shape[1] >= 14:
+        last_image = resized
+    return target_img
+
+
 def square_patches(path, target):
     '''
     Converts all images to 32x32 patches and moves them to the target directory
     '''
-    target_img = np.ndarray(shape=(32, 32, 3), dtype='uint8')
+    last_image = None
     for (dirpath, dirnames, filenames) in os.walk(os.path.join(path, 'char')):
         for name in filenames:
             source_filename = os.path.join(dirpath, name)
 
             img = cv2.imread(source_filename)
-            scale = 32.0/max(img.shape[:2])
-            if scale > 1:
-                interpolation = cv2.INTER_LINEAR
-            else:
-                interpolation = cv2.INTER_AREA
 
-            try:
-                resized = cv2.resize(img, None, fx=scale, fy=scale,
-                                     interpolation=interpolation)
-            except Exception as e:
-                logging.warning('Error squaring patch: {}'.format(e))
-                continue
-
-            # copy into target_img
-            target_img[:, :, :] = 0
-            y_start = int((32-resized.shape[0])/2)
-            x_start = int((32-resized.shape[1])/2)
-            target_img[y_start:y_start+resized.shape[0],
-                       x_start:x_start+resized.shape[1],
-                       :] = resized
-
-            # extend the empty areas at the sides with the
-            if y_start > 0:
-                target_img[0:y_start, :, :] = resized[0, :, :][np.newaxis, :, :]
-                target_img[y_start+resized.shape[0]:, :, :] = \
-                    resized[0, :, :][np.newaxis, :, :]
-            if x_start > 0:
-                target_img[:, 0:x_start, :] = resized[:, 0, :][:, np.newaxis, :]
-                target_img[:, x_start+resized.shape[1]:, :] = \
-                    resized[:, 0, :][:, np.newaxis, :]
             os.makedirs(os.path.join(target, os.path.relpath(dirpath, path)),
                         exist_ok=True)
+            try:
+                cv2.imwrite(os.path.join(target,
+                                        os.path.relpath(dirpath, path),
+                                        name),
+                            square_patch(img))
+            except Exception as e:
+                logging.warn('Exception for {}: {}'.format(name, e))
 
-            cv2.imwrite(os.path.join(target,
-                                     os.path.relpath(dirpath, path),
-                                     name),
-                        target_img)
 
 
 def create_data_set(dir, labels, dictionary):

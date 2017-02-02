@@ -66,7 +66,6 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
     '''
     Return random windows for given image
     WINDOWS ARE NOT PREPROCESSED!
-    @TODO: Sometimes returns text windows smaller then 32x32
     '''
 
     #find path folder/image

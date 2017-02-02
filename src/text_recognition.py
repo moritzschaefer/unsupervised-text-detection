@@ -5,13 +5,23 @@ import pickle
 import glob
 import os
 import time
+import logging
 
 import numpy as np
 import config
+import matplotlib.pyplot as plt
 
 from sklearn import svm
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import ShuffleSplit
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import learning_curve
+#test
+from sklearn.linear_model import LogisticRegression
+from sklearn.calibration import CalibratedClassifierCV
+
+logging.basicConfig(level=logging.INFO)
 
 # load previously build model
 def load_tr_model(path):
@@ -24,16 +34,6 @@ def save_tr_model(model, filename):
     pickle.dump(model, open(filename, 'wb'))
 
 
-def add_feature_data(windowspath, X=[]):
-    """
-    adds feature representations from windowspath to dataset
-    """
-    for window in windowspath:
-        w = np.load(window)
-        X.append(np.array(w).flatten())
-    return X
-
-
 # prepare data
 def prepare_tr_training_data(text_windows_path, n_text_windows_path):
     """
@@ -44,36 +44,71 @@ def prepare_tr_training_data(text_windows_path, n_text_windows_path):
 
     X = []
 
-    X = add_feature_data(text_windows, X)
-    X = add_feature_data(ntext_windows, X)
+    n_text = 0
+    for window in text_windows:
+        w = np.load(window)
+        # check for right dimensionality
+        if w.shape == (3, 3, config.NUM_D):
+            X.append(np.array(w).flatten())
+            n_text += 1
+        else:
+            pass
 
-    n_text = len(text_windows)
-    n_ntext = len(ntext_windows)
+    n_ntext = 0
+    for window in ntext_windows:
+        w = np.load(window)
+        # check for right dimensionality
+        if w.shape == (3, 3, config.NUM_D):
+            X.append(np.array(w).flatten())
+            n_ntext += 1
+        else:
+            pass
 
     y = [0] * (n_text + n_ntext)
 
-    y[0:n_text] = [1]*n_text
+    y[0:n_text] = [1] * n_text
 
     return shuffle(np.array(X), np.array(y))
-
 
 # train model
 def train_tr_model(X, y, verbose = 0):
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=7)
+    # train test split
+    X_train, X_test, y_train, y_test = train_test_split(X[0:1000], y[0:1000], test_size=0.20, random_state=7)
 
+    # crossvalidation
+    cv = ShuffleSplit(n_splits=5, test_size=0.2, random_state=7)
+
+    # paramgrid
+    param_grid=[{'C': [2**x for x in range(-2, 2)]}]
+
+    # model
     model = svm.LinearSVC()
+    #@TODO: Test other models:
+    #model = LogisticRegression(solver='sag')
+    # http://stackoverflow.com/questions/26478000/converting-linearsvcs-decision-function-to-probabilities-scikit-learn-python
+
+    # gridsearch
     start = time.time()
-    model.fit(X_train, y_train)
+    classifier = GridSearchCV(estimator=model, cv=cv, param_grid=param_grid, refit=True, verbose=3, n_jobs=1)
+    classifier.fit(X_train, y_train)
     end = time.time()
-    print("Single SVC, training time: {t}s, score: {s}".format(t = end - start, s = model.score(X_test, y_test)))
+
+    logging.info("GridSearch done, time: {t}s, score: {s}".format(t = end - start, s = classifier.score(X_test, y_test)))
+
+    best_C = classifier.best_params_['C']
+
+    model = CalibratedClassifierCV(svm.LinearSVC(C=best_C))
+    model.fit(X_train, y_train)
+    #print(model.predict_proba(X_test))
+
     return model
 
 if __name__ == "__main__":
 
-    text_windows = os.path.join(config.WINDOW_PATH, 'true/')
-    ntext_windows = os.path.join(config.WINDOW_PATH, 'false/')
-    
+    text_windows = os.path.join(config.FEATURE_PATH, 'true/')
+    ntext_windows = os.path.join(config.FEATURE_PATH, 'false/')
+
     X, y = prepare_tr_training_data(text_windows, ntext_windows)
     tr_model = train_tr_model(X, y)
     save_tr_model(tr_model, config.TEXT_MODEL_PATH)

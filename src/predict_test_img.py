@@ -8,30 +8,26 @@ import glob
 from skimage.transform import pyramid_gaussian
 import pickle
 from multiprocessing.pool import Pool
-
+import logging
 
 # TODO use a path from config
-dictionary = np.load(config.DICT_PATH)  # get dictionary
+D = np.load(config.DICT_PATH)  # get dictionary
 
 
 # get all windows of a image
 def sliding_window(img, step_size=1):
-    # windows=[]
     for y in range(0, img.shape[0]-32, step_size):
         for x in range(0, img.shape[1]-32, step_size):
             yield x, y, img[y:min(y+32, img.shape[0]), x:min(x+32, img.shape[1]), :]
-            # windows.append(img[x:x+32,y:y+32])
-    # return windows
 
 
 def async_predict(args):
     x, y, window = args
     print(x, y)
-    features = feature_extraction.get_features_for_window(
-        dictionary, window.astype('float32'))
+    features = feature_extraction.get_features_for_window(window.astype('float32'))
     # reshape it so it contains a single sample
-    v = model.decision_function(features[1].flatten().reshape(1, -1))
-    return x, y, v[0]
+    v = model.predict_proba(features[1].flatten().reshape(1, -1))
+    return x, y, v[0][1]
 
 
 # return the value of every pixels of a image
@@ -81,13 +77,13 @@ if __name__ == "__main__":
                 for layer in prediction_layers:
                     # x and y in the layer which correspond to position in
                     # original image
-                    trans_y = (layer.shape[0]/img.shape[0]) * y
-                    trans_x = (layer.shape[1]/img.shape[1]) * y
+                    #trans_y = (layer.shape[0]/img.shape[0]) * y
+                    #trans_x = (layer.shape[1]/img.shape[1]) * y
 
-                    window = layer[max(0, trans_y-32):
-                                   min(trans_y+1, layer.shape[0]),
-                                   max(0, trans_x-32):
-                                   min(trans_x+1, layer.shape[1])]
+                    window = layer[max(0, x-32):
+                                   min(y+1, layer.shape[0]),
+                                   max(0, x-32):
+                                   min(x+1, layer.shape[1])]
 
                     max_probability = max(max_probability, window.max())
 

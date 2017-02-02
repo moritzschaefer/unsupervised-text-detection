@@ -9,16 +9,19 @@ import numpy as np
 import cv2
 
 import config
+import preprocessing
 
 logging.basicConfig(level=logging.INFO)
 
 
 def read_files():
-    patches = glob.glob('{}/*.jpg'.format(config.PATCH_PATH))
+    patches = glob.glob('{}/*.npy'.format(config.PATCH_PATH))
     X = np.empty((64, len(patches)))
     for i, patch in enumerate(patches):
 
-        X[:, i] = cv2.imread(patch, 0).flatten()
+        preprocessed_img_patch = preprocessing.preprocess(np.load(patch))
+
+        X[:, i] = preprocessed_img_patch.flatten()
 
     # check for NaNs
     return X

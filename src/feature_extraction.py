@@ -1,5 +1,6 @@
 """feature extraction for windows"""
 
+from multiprocessing import Pool
 import numpy as np
 import cv2
 import glob
@@ -7,28 +8,38 @@ import os
 from uuid import uuid4
 from preprocessing import preprocess
 import config
+import logging
 
+logging.basicConfig(level=logging.INFO)
 
-def get_z(dictionary, x):
+def get_z(x, dictionary):
+
     # x should be in dimension 64x1
     flattend_x = np.ndarray.flatten(x)
+
+    # get value |D^Tx| - ALPHA
     tmp = np.abs(np.dot(dictionary.T, flattend_x)) - config.ALPHA
-    for i, entry in enumerate(tmp):
-        if entry < 0:
-            tmp[i] = 0
+
+    # choose maximum from 0 and tmp
+    indexes = np.where(tmp < float(0))
+    tmp[indexes] = 0
+
     return tmp
 
-
-def get_pooling(z, stepSize, windowSize):
+def get_pooling(z):
+    #import pdb; pdb.set_trace()
     res = []
-    # sliding window over z
-    for y in range(0, z.shape[0], stepSize):
+    # sliding window over z, no overlap
+    for y in range(0, z.shape[0], 8):
         row = []
-        for x in range(0, z.shape[1], stepSize):
-            pool = z[y:y + windowSize[1], x:x + windowSize[0]]
+        for x in range(0, z.shape[1], 8):
+            pool = z[x:x + 8, y:y + 8]
+            #print(pool)
 
             # add all entries from pool elementwise
-            tmp = np.ones(z.shape[2])
+            tmp = np.zeros(z.shape[2])
+
+            # iterate over last dimension
             for i in np.ndindex(pool.shape[:2]):
                 tmp += pool[i]
 
@@ -36,42 +47,16 @@ def get_pooling(z, stepSize, windowSize):
         res.append(row)
     return np.array(res)
 
-
-def extract_all_windows(stepSize, windowSize):
-    '''
-    Return all windows for given image
-    '''
-    image_files = glob.glob(os.path.join(config.DATASET_PATH, '*.jpg'))
-
-    for f in image_files:
-
-        filename = os.path.splitext(os.path.split(f)[1])[0]
-
-        if not os.path.exists(os.path.join(config.WINDOW_PATH, filename)):
-            os.makedirs(os.path.join(config.WINDOW_PATH, filename))
-
-        img = cv2.imread(f)
-
-        for y in range(0, img.shape[0], stepSize):
-            for x in range(0, img.shape[1], stepSize):
-                # yield the current window
-                window = (x, y, img[y:y + windowSize[1], x:x + windowSize[0]])
-                cv2.imwrite('{}/{}.jpg'.format(os.path.join(config.WINDOW_PATH,
-                                                            filename),
-                                               uuid4()), window[2])
-
-    print('finished window extraction.')
-
-
-def get_features_for_window(dictionary, window):
+def get_features_for_window(window):
     """
     :dictionary: np array of the dictionary
     :window: either an np.ndarray or a filename to a window
     return feature representation for given window
     """
+    dictionary = np.load(config.DICT_PATH)
 
     if not isinstance(window, (np.ndarray, np.generic)):
-        img = cv2.imread(window)
+        img = np.load(window)
     else:
         img = window
 
@@ -80,23 +65,20 @@ def get_features_for_window(dictionary, window):
         return (False, np.array(img).shape)
 
     z = []
-
-    stepSize = 1
-    windowSize = (8, 8)
-
-    for y in range(0, img.shape[1] - 7, stepSize):
+    # sliding window over window
+    for y in range(0, img.shape[0] - 7):
 
         row = []
 
-        for x in range(0, img.shape[0] - 7, stepSize):
+        for x in range(0, img.shape[1] - 7):
             # yield the current window
-            patch = img[y:y + windowSize[1], x:x + windowSize[0]]
+            patch = img[x:x + 8, y:y + 8]
 
             # preprocess patch
             patch = preprocess(patch)
 
             #get z entry for preprocessed patch
-            row.append(get_z(dictionary, patch))
+            row.append(get_z(patch, dictionary))
 
         #push row to z
         z.append(row)
@@ -110,30 +92,40 @@ def get_features_for_window(dictionary, window):
     z = z[0:-1, 0:-1]
 
     #pooling
-    pooled = get_pooling(z, 8, (8, 8))
+    pooled = get_pooling(z)
 
-    return (True, pooled)
+    return (True, pooled, window)
 
 
-def create_features_for_all_windows(path, dictionary):
+def create_features_for_all_windows(path, text, n_jobs=1):
 
-    window_files = glob.glob(os.path.join(path, '*.jpg'))
-    print('creating features for {} windows.'.format(len(window_files)))
+    window_files = glob.glob(os.path.join(path, '*.npy'))
+    logging.info('creating features for {} windows.'.format(len(window_files)))
+
+    if text:
+        save_path = os.path.join(config.FEATURE_PATH, 'true/')
+    else:
+        save_path = os.path.join(config.FEATURE_PATH, 'false/')
+
+    # multiprocessing
+    p = Pool(n_jobs)
+    results = p.map(get_features_for_window, window_files)
+
+    p.close()
+    p.join()
+
+    # count wrong computations
     counter = 0
-
-    for i, window in enumerate(window_files):
-        windowname = os.path.splitext(os.path.split(window)[1])[0]
-        features = get_features_for_window(dictionary, window)
+    for i, features in enumerate(results):
+        # feature computation succesful
         if features[0]:
-            np.save(window[:-4], features[1])
+            np.save(os.path.join(save_path, os.path.basename(features[2])), features[1])
         else:
+            # computation not succesful
             counter += 1
 
-        #if (i + 1)% 100 == 0:
-            #print('window {} finished'.format(i + 1))
-            #print('{} malformed windows'.format(counter))
+    logging.info('finished feature extraction. {} malformed windows encounterd.'.format(counter))
 
-    print('finished feature extraction. {} malformed windows'.format(counter))
 
 if __name__ == "__main__":
     D = np.load(config.DICT_PATH)
@@ -141,5 +133,5 @@ if __name__ == "__main__":
     text_windows = os.path.join(config.WINDOW_PATH, 'true/')
     ntext_windows = os.path.join(config.WINDOW_PATH, 'false/')
 
-    create_features_for_all_windows(text_windows, D)
-    create_features_for_all_windows(ntext_windows, D)
+    create_features_for_all_windows(text_windows, True, n_jobs=6)
+    create_features_for_all_windows(ntext_windows, False, n_jobs=6)

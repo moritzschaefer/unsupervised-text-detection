@@ -12,18 +12,16 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import preprocessing
-
+import logging
 
 
 def extract_random_patches(path, patches, resize = False):
     '''
     Return random patches for img in path
-    @TODO: Sometimes returns patches smaller than 8x8
+    PATCHES ARE NOT PREPROCESSED!
     '''
 
     img = cv2.imread(path)
-
-    img = preprocessing.preprocess(img)
 
     if resize:
         height, width = img.shape[:2]
@@ -31,23 +29,24 @@ def extract_random_patches(path, patches, resize = False):
                          interpolation = cv2.INTER_AREA)
 
     for i in range(patches):
-        x = random.randint(0, img.shape[0] - 8)
-        y = random.randint(0, img.shape[1] - 8)
-        patch = img[x:x+8, y:y+8]
-        #plt.imshow(patch)
-        # imwrite only able to save int images, values are floats
-        cv2.imwrite('{}/{}.jpg'.format(config.PATCH_PATH, uuid4()), patch)
+        x = random.randint(0, img.shape[1] - 8)
+        y = random.randint(0, img.shape[0] - 8)
+        patch = img[y:y+8, x:x+8]
+        # write patch to fs
+        #imsave('{}/{}.jpg'.format(config.PATCH_PATH, uuid4()), patch)
+        np.save('{}/{}.npy'.format(config.PATCH_PATH, uuid4()), patch)
 
-def count_images():
+def count_images(path):
     """
     counts images
     """
     c = 0
 
-    image_folders = glob.glob(os.path.join(config.SCENERY_PATH, '*/'))
+    image_folders = glob.glob(os.path.join(path, '*/'))
 
     for folder in image_folders:
-        image_files = glob.glob(os.path.join(folder, '*.jpg'))
+        image_files = glob.glob(os.path.join(folder, '*.JPG'))
+        image_files.append(glob.glob(os.path.join(folder, '*.jpg')))
         c += len(image_files)
     return c
 
@@ -66,8 +65,9 @@ def parse_xml(tree):
 def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, plot):
     '''
     Return random windows for given image
+    WINDOWS ARE NOT PREPROCESSED!
+    @TODO: Sometimes returns text windows smaller then 32x32
     '''
-
 
     #find path folder/image
     meta_name = Path(path).parts[-2] + '/' + Path(path).parts[-1]
@@ -96,7 +96,7 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
         return
 
     img = cv2.imread(path)
-    img = preprocessing.preprocess(img)
+    #img = preprocessing.preprocess(img)
 
     # check for img reading errors
     if img is None:
@@ -134,11 +134,18 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
 
             x = random.randint(text_box[0], text_box[0] + text_box[1] - 32)
             y = random.randint(text_box[2], text_box[2] + text_box[3] - 32)
-            window = (x, y, img[x:x + windowSize[0], y:y + windowSize[1]])
+            window = (x, y, img[y:y + 32, x:x + 32])
+
+            if window[2].shape != (32, 32, 3):
+                print('-----------------------')
+                print('text_window malformed: {}'.format(window[2].shape))
+                print('image size: {}'.format(img.shape))
+                print('sampled y: {}, sampled x: {}'.format(window[1], window[0]))
+
             if plot:
                 rect = patches.Rectangle((window[0], window[1]),32,32,linewidth=1,edgecolor='r',facecolor='none')
                 ax.add_patch(rect)
-            cv2.imwrite('{}/true/{}.jpg'.format(config.WINDOW_PATH, uuid4()), window[2])
+            np.save('{}/true/{}.npy'.format(config.WINDOW_PATH, uuid4()), window[2])
 
     else:
 
@@ -150,8 +157,8 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
             restricted_x_coordinates.append(list(range(box[0] - 32, box[0]+ box[1])))
             restricted_y_coordinates.append(list(range(box[2] - 32, box[2]+ box[3])))
 
-        possible_x = list(range(0, img.shape[0] - 32))
-        possible_y = list(range(0, img.shape[1] - 32))
+        possible_x = list(range(0, img.shape[1] - 32))
+        possible_y = list(range(0, img.shape[0] - 32))
 
         # areas with text
         restricted_x_coordinates = [item for sublist in restricted_x_coordinates for item in sublist]
@@ -168,12 +175,18 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
         for i in range(windows):
             x = random.choice(allowed_x)
             y = random.choice(allowed_y)
-            window = (x, y, img[x:x + windowSize[0], y:y + windowSize[1]])
+            window = (x, y, img[y:y + 32, x:x + 32])
+
+            if window[2].shape != (32, 32, 3):
+                print('-----------------------')
+                print('n_text_window malformed: {}'.format(window[2].shape))
+                print('image size: {}'.format(img.shape))
+                print('sampled y: {}, sampled x: {}'.format(window[1], window[0]))
 
             if plot:
                 rect = patches.Rectangle((window[0], window[1]),32,32,linewidth=1,edgecolor='r',facecolor='none')
                 ax.add_patch(rect)
-            cv2.imwrite('{}/false/{}.jpg'.format(config.WINDOW_PATH, uuid4()), window[2])
+            np.save('{}/false/{}.npy'.format(config.WINDOW_PATH, uuid4()), window[2])
 
         if plot:
             plt.show()

@@ -8,30 +8,26 @@ import glob
 from skimage.transform import pyramid_gaussian
 import pickle
 from multiprocessing.pool import Pool
-
+import logging
 
 # TODO use a path from config
-dictionary = np.load(config.DICT_PATH)  # get dictionary
+D = np.load(config.DICT_PATH)  # get dictionary
 
 
 # get all windows of a image
 def sliding_window(img, step_size=1):
-    # windows=[]
     for y in range(0, img.shape[0]-32, step_size):
         for x in range(0, img.shape[1]-32, step_size):
             yield x, y, img[y:min(y+32, img.shape[0]), x:min(x+32, img.shape[1]), :]
-            # windows.append(img[x:x+32,y:y+32])
-    # return windows
 
 
 def async_predict(args):
     x, y, window = args
     print(x, y)
-    features = feature_extraction.get_features_for_window(
-        dictionary, window.astype('float32'))
+    features = feature_extraction.get_features_for_window(window.astype('float32'))
     # reshape it so it contains a single sample
-    v = model.decision_function(features[1].flatten().reshape(1, -1))
-    return x, y, v[0]
+    v = model.predict_proba(features[1].flatten().reshape(1, -1))
+    return x, y, v[0][1]
 
 
 # return the value of every pixels of a image

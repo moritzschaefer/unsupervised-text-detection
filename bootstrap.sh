@@ -8,6 +8,9 @@ cd data
 mkdir -p patches
 mkdir -p windows/true
 mkdir -p windows/false
+mkdir -p features
+mkdir -p features/true
+mkdir -p features/false
 
 echo "download necessary data files"
 
@@ -55,4 +58,4 @@ python3 feature_extraction.py
 echo "run text_recognition"
 python3 text_recognition.py
 
-echo "  python3 character_training.py"
+echo "python3 character_training.py"

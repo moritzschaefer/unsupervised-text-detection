@@ -80,6 +80,7 @@ def predict_images():
         predicted_layers = get_prediction_values(img, text_model)
         for layer_img, layer_predictions in predicted_layers:
             # compute
+            print('Calculate Characters for layer {}'.format(layer_img.shape))
             texts = character_recognition(layer_img, layer_predictions,
                                           dictionary, character_model)
 
@@ -87,6 +88,8 @@ def predict_images():
             cv2.imshow("image 1", layer_img)
             cv2.imshow("image 2", layer_predictions)
             cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
 
         # combine_probability_layers(img, predicted_layers)
 

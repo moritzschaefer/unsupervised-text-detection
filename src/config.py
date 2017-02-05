@@ -20,6 +20,6 @@ ALPHA = .5 #hyperparam from feature extraction #TODO tune this in crossval
 
 NUM_D = 200  # number of dictionary entries
 
-RESIZE = True
+RESIZE_WORDS_FOR_DIC = True
 
 C_RANGE = range(-5, 5) #range of regularization (error acceptance http://stats.stackexchange.com/questions/31066/what-is-the-influence-of-c-in-svms-with-linear-kernel)

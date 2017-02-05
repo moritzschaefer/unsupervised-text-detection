@@ -67,7 +67,7 @@ def extract_random_patches_for_training():
 
         for f in image_files:
 
-            extract_random_patches(f, config.NUM_PATCHES_PER_TEXT, config.RESIZE)
+            extract_random_patches(f, config.NUM_PATCHES_PER_TEXT, config.RESIZE_WORDS_FOR_DIC)
 
 
 if __name__ == "__main__":

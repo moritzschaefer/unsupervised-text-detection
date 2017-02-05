@@ -52,7 +52,7 @@ def average_clusters(X, assignments, magnitudes):
     for i, x in enumerate(X.T):
         D[:, assignments[i]] += x * magnitudes[i]
 
-    epsilon = 0.00000001
+    epsilon = 0.00001
     # normalize columns
     # check normalization divisor for 0
     pre = np.sqrt(np.sum(D**2, axis=0))

@@ -49,7 +49,6 @@ def get_pooling(z):
 
 def get_features_for_window(window):
     """
-    :dictionary: np array of the dictionary
     :window: either an np.ndarray or a filename to a window
     return feature representation for given window
     """

@@ -13,6 +13,9 @@ logging.basicConfig(level=logging.INFO)
 
 def extract_random_patches_for_training():
 
+    print(extraction.count_images(config.TEXT_PATH))
+    print(config.NUM_PATCHES_PER_TEXT)
+
     n_patches =  extraction.count_images(config.TEXT_PATH) * config.NUM_PATCHES_PER_TEXT
 
     logging.info('extracting {} patches for dictionary training.'.format(n_patches))
@@ -25,7 +28,7 @@ def extract_random_patches_for_training():
 
         for f in image_files:
 
-            extraction.extract_random_patches(f, config.NUM_PATCHES_PER_TEXT, False)
+            extraction.extract_random_patches(f, config.NUM_PATCHES_PER_TEXT, config.RESIZE)
 
 
 if __name__ == "__main__":

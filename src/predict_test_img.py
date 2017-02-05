@@ -77,13 +77,13 @@ if __name__ == "__main__":
                 for layer in prediction_layers:
                     # x and y in the layer which correspond to position in
                     # original image
-                    #trans_y = (layer.shape[0]/img.shape[0]) * y
-                    #trans_x = (layer.shape[1]/img.shape[1]) * y
+                    trans_y = (layer.shape[0]/img.shape[0]) * y
+                    trans_x = (layer.shape[1]/img.shape[1]) * y
 
-                    window = layer[max(0, x-32):
-                                   min(y+1, layer.shape[0]),
-                                   max(0, x-32):
-                                   min(x+1, layer.shape[1])]
+                    window = layer[max(0, trans_y-32):
+                                   min(trans_y+1, layer.shape[0]),
+                                   max(0, trans_x-32):
+                                   min(trans_x+1, layer.shape[1])]
 
                     max_probability = max(max_probability, window.max())
 

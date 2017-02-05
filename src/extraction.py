@@ -15,7 +15,7 @@ import preprocessing
 import logging
 
 
-def extract_random_patches(path, patches, resize = False):
+def extract_random_patches(path, patches, resize = True):
     '''
     Return random patches for img in path
     PATCHES ARE NOT PREPROCESSED!

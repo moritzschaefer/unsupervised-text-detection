@@ -15,9 +15,11 @@ CHARACTER_MODEL_PATH = os.path.join(BASE_DIR, 'data/character_model.pkl')
 NUM_PATCHES_PER_TEXT = 100  # TODO this should be >100, for classification training purposes 30 atm
 TEXT_MODEL_PATH = os.path.join(BASE_DIR, 'data/text_model.pkl')
 TEST_IMAGE_PATH = os.path.join(BASE_DIR, 'data/test_images/')
-TOTAL_WINDOWS_FOR_TRAINING = 20000 #min is 251
+TOTAL_WINDOWS_FOR_TRAINING = 10000 #min is 251
 ALPHA = .5 #hyperparam from feature extraction #TODO tune this in crossval
 
-NUM_D = 500  # number of dictionary entries
+NUM_D = 200  # number of dictionary entries
 
-RESIZE = False
+RESIZE = True
+
+C_RANGE = range(-5, 5) #range of regularization (error acceptance http://stats.stackexchange.com/questions/31066/what-is-the-influence-of-c-in-svms-with-linear-kernel)

@@ -58,4 +58,4 @@ python3 feature_extraction.py
 echo "run text_recognition"
 python3 text_recognition.py
 
-python3 character_training.py
+echo "python3 character_training.py"

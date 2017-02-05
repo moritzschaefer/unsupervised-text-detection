@@ -74,13 +74,13 @@ def prepare_tr_training_data(text_windows_path, n_text_windows_path):
 def train_tr_model(X, y, verbose = 0):
 
     # train test split
-    X_train, X_test, y_train, y_test = train_test_split(X[0:1000], y[0:1000], test_size=0.20, random_state=7)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=7)
 
     # crossvalidation
     cv = ShuffleSplit(n_splits=5, test_size=0.2, random_state=7)
 
     # paramgrid
-    param_grid=[{'C': [2**x for x in range(-2, 2)]}]
+    param_grid=[{'C': [2**x for x in config.C_RANGE]}]
 
     # model
     model = svm.LinearSVC()
@@ -94,12 +94,14 @@ def train_tr_model(X, y, verbose = 0):
     classifier.fit(X_train, y_train)
     end = time.time()
 
-    logging.info("GridSearch done, time: {t}s, score: {s}".format(t = end - start, s = classifier.score(X_test, y_test)))
+    logging.info("GridSearch done, time: {t}s".format(t = end - start))
 
     best_C = classifier.best_params_['C']
 
     model = CalibratedClassifierCV(svm.LinearSVC(C=best_C))
     model.fit(X_train, y_train)
+
+    logging.info("Prediction score: ", model.score(X_test, y_test))
     #print(model.predict_proba(X_test))
 
     return model
@@ -110,5 +112,6 @@ if __name__ == "__main__":
     ntext_windows = os.path.join(config.FEATURE_PATH, 'false/')
 
     X, y = prepare_tr_training_data(text_windows, ntext_windows)
+
     tr_model = train_tr_model(X, y)
     save_tr_model(tr_model, config.TEXT_MODEL_PATH)

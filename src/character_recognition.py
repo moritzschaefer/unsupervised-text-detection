@@ -33,10 +33,9 @@ def character_recognition(img, text_probability, dictionary, model):
     :return: A list of dictionaries, each containing position and text
 
     '''
-    # TODO tweak param
-    THRESHOLD = 0.7
     texts = []
-    for bbox in bounding_boxes(text_probability, THRESHOLD):
+    for bbox in bounding_boxes(text_probability,
+                               config.TEXT_RECOGNITION_THRESHOLD):
         text = predict_bbox(img, text_probability, bbox, dictionary, model)
         texts.append({'x': bbox[1], 'y': bbox[0], 'text': text})
 
@@ -79,9 +78,8 @@ def bounding_boxes(img, threshold):
     return [v.bbox for v in measure.regionprops(labeled)]
 
 
-# TODO tweak params
 def bbox_windows(img, text_probability, bbox, size=32,
-                 probability_threshold=32*32*0.6):
+                 probability_threshold=config.BOUNDING_BOX_THRESHOLD):
     '''
     Yields all bounding boxes with  high enough text text_probability
     :probability_threshold: defines the necesarry some of probabilties for the
@@ -114,8 +112,7 @@ def predict_bbox(img, text_probability, bbox, dictionary, model):
         character_probabilities[y, x] = model.decision_function(features)
         characters[y, x] = model.predict(features)
 
-    # TODO now filter the responses
-    #
+    # TODO now filter the responses..
     vertical_maxima = characters[character_probabilities.argmax(axis=0)]
 
     return vertical_maxima

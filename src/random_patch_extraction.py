@@ -23,8 +23,7 @@ def count_images(path):
     image_folders = glob.glob(os.path.join(path, '*/'))
 
     for folder in image_folders:
-        image_files = glob.glob(os.path.join(folder, '*.JPG'))
-        image_files.append(glob.glob(os.path.join(folder, '*.jpg')))
+        image_files = glob.glob(os.path.join(folder, '*.jpg'))
         c += len(image_files)
     return c
 
@@ -51,9 +50,6 @@ def extract_random_patches(path, patches, resize = True):
 
 
 def extract_random_patches_for_training():
-
-    print(count_images(config.TEXT_PATH))
-    print(config.NUM_PATCHES_PER_TEXT)
 
     n_patches =  count_images(config.TEXT_PATH) * config.NUM_PATCHES_PER_TEXT
 

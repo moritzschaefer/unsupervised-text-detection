@@ -100,20 +100,23 @@ def square_patches(path, target):
 
 
 
-def create_data_set(dir, labels, dictionary):
-    tree = ET.parse(labels)
+def create_data_set(dir, label_file):
+    tree = ET.parse(label_file)
     labels = []
     features = []
     for child in tree.getroot():
         filename = child.attrib['file']
         try:
             extracted_features = extract_feature_vector(os.path.join(dir,
-                                                                     filename),
-                                                        dictionary)
-        except Exception as e:
+                                                                     filename))
+        except FileNotFoundError:  # noqa
             import ipdb
             ipdb.set_trace()
             logging.warn('Could not find file {}. Skip'.format(filename))
+        except Exception as e:
+            logging.warn('error: {}'.format(e))
+            import ipdb
+            ipdb.set_trace()
         else:
             labels.append(child.attrib['tag'])
             features.append(extracted_features[1].flatten())
@@ -125,9 +128,9 @@ def create_data_set(dir, labels, dictionary):
     return features, labels
 
 
-def extract_feature_vector(filename, dictionary):
+def extract_feature_vector(filename):
     try:
-        return get_features_for_window(dictionary, filename)
+        return get_features_for_window(filename)
     except ValueError as e:
         print('file {} couldn\'t be read: {}'.format(filename, e.message))
 
@@ -169,8 +172,7 @@ def train_model():
     logging.info('Created square patches. Extracting training data set')
     features, labels = create_data_set(
         os.path.join(config.DATA_DIR, 'character_icdar_train/extracted/'),
-        os.path.join(config.DATA_DIR, 'character_icdar_train/char.xml'),
-        dictionary)
+        os.path.join(config.DATA_DIR, 'character_icdar_train/char.xml'))
     logging.info('Created training data set. Now training SVM')
     model = train_character_svm(features, labels)
     logging.info('Trained model')
@@ -179,7 +181,6 @@ def train_model():
 
 if __name__ == "__main__":
 
-    dictionary = np.load(config.DICT_PATH)
     try:
         logging.info('Trying to load model')
         model = load_model()
@@ -201,8 +202,7 @@ if __name__ == "__main__":
         logging.info('Building test data set')
         test_features, test_labels = create_data_set(
             os.path.join(config.DATA_DIR, 'character_icdar_test/extracted'),
-            os.path.join(config.DATA_DIR, 'character_icdar_test/char.xml'),
-            dictionary)
+            os.path.join(config.DATA_DIR, 'character_icdar_test/char.xml'))
         logging.info('Test data loaded. Predicting test data')
         with open('test_set.pkl', 'wb') as f:
             pickle.dump((test_features, test_labels), f)

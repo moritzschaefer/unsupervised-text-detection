@@ -29,7 +29,7 @@ def character_recognition(img, text_probability, dictionary, model):
     Calculates the texts in an img
     :img: The original image
     :text_probability: The text recognition probability image. pixels
-    should be probablities in range [0,1]
+    should be probablities in range [0,1]. has dimension img.shape - (31,31)
     :return: A list of dictionaries, each containing position and text
 
     '''
@@ -48,7 +48,7 @@ def cut_character(window):
     :return: A 32x32 window with right and left black areas, only containing the
     centered character (ideally)
     '''
-    gauss = norm.pdf(list(range(32)),loc=16,scale=4)
+    gauss = norm.pdf(list(range(32)), loc=16, scale=4)
     gauss = (1-(gauss / gauss.max()))
 
     threshold1 = 100
@@ -75,7 +75,9 @@ def bounding_boxes(img, threshold):
     blobs = img > threshold
     labeled = measure.label(blobs)
 
-    return [v.bbox for v in measure.regionprops(labeled)]
+    # TODO is this 31 maybe??
+    return [(y1, x1, y2+32, x2+32)
+            for y1, x1, y2, x2 in measure.regionprops(labeled)]
 
 
 def bbox_windows(img, text_probability, bbox, size=32,
@@ -129,4 +131,4 @@ if __name__ == "__main__":
 
     filename = os.path.join(config.TEXT_PATH, '2/104.jpg')
 
-    get_predictions(filename, model, dictionary)
+    predict_wordfile(filename, model, dictionary)

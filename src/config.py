@@ -18,12 +18,12 @@ TEST_IMAGE_PATH = os.path.join(BASE_DIR, 'data/test_images/')
 TOTAL_WINDOWS_FOR_TRAINING = 5000 #min is 251
 ALPHA = .5 #hyperparam from feature extraction #TODO tune this in crossval
 
-NUM_D = 200  # number of dictionary entries
+NUM_D = 1000  # number of dictionary entries
 
 
 TEXT_RECOGNITION_THRESHOLD = 0.7
 BOUNDING_BOX_THRESHOLD =  32*32*0.6
 
-RESIZE_WORDS_FOR_DIC = True
+RESIZE_WORDS_FOR_DIC = False
 
 C_RANGE = range(-5, 5) #range of regularization (error acceptance http://stats.stackexchange.com/questions/31066/what-is-the-influence-of-c-in-svms-with-linear-kernel)

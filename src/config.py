@@ -21,8 +21,11 @@ ALPHA = .5 #hyperparam from feature extraction #TODO tune this in crossval
 NUM_D = 1000  # number of dictionary entries
 
 
-TEXT_RECOGNITION_THRESHOLD = 0.7
-BOUNDING_BOX_THRESHOLD =  32*32*0.6
+# the thresholds depend on STEP_SIZE
+STEP_SIZE = 4
+TEXT_RECOGNITION_THRESHOLD = 36*4/STEP_SIZE
+# 90%  of a TR-threshold should be matched at least in average
+BOUNDING_BOX_THRESHOLD =  32*32*TEXT_RECOGNITION_THRESHOLD*0.9
 
 RESIZE_WORDS_FOR_DIC = False
 

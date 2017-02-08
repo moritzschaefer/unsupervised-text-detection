@@ -54,7 +54,7 @@ def cut_character(window):
     threshold1 = 100
     threshold2 = 200
 
-    canny = cv2.Canny(window, threshold1, threshold2)
+    canny = cv2.Canny(np.uint8(window*255), threshold1, threshold2)
     canny[canny > 0] = 1
 
     # fig,ax = plt.subplots()
@@ -76,8 +76,8 @@ def bounding_boxes(img, threshold):
     labeled = measure.label(blobs)
 
     # TODO is this 31 maybe??
-    return [(y1, x1, y2+32, x2+32)
-            for y1, x1, y2, x2 in measure.regionprops(labeled)]
+    return [(v.bbox[0], v.bbox[1], v.bbox[2], v.bbox[3])
+            for v in measure.regionprops(labeled)]
 
 
 def bbox_windows(img, text_probability, bbox, size=32,
@@ -91,11 +91,11 @@ def bbox_windows(img, text_probability, bbox, size=32,
     if min([bbox[2]-bbox[0], bbox[3]-bbox[1]]) < 32:
         return
 
-    for y in range(bbox[0], bbox[1]-31):
-        for x in range(bbox[2], bbox[3]-31):
+    for y in range(bbox[1], bbox[3]-31):
+        for x in range(bbox[0], bbox[2]-31):
             window = img[y:y+32, x:x+32]
-            if text_probability[y:y+32, x:x+32] > probability_threshold:
-                yield y-bbox[0], x-bbox[1], window
+            if text_probability[y:y+32, x:x+32].sum() > probability_threshold:
+                yield y-bbox[1], x-bbox[0], window
 
 
 def predict_bbox(img, text_probability, bbox, dictionary, model):
@@ -103,13 +103,12 @@ def predict_bbox(img, text_probability, bbox, dictionary, model):
     predict all characters in a bbox
     '''
 
-    character_probabilities = np.zeros((bbox[2]-bbox[0], bbox[3]-bbox[1]))
-    characters = np.chararray((bbox[2]-bbox[0], bbox[3]-bbox[1]))
+    character_probabilities = np.zeros((bbox[3]-bbox[1], bbox[2]-bbox[0]))
+    characters = np.chararray((bbox[3]-bbox[1], bbox[2]-bbox[0]))
 
-    features = []
     for y, x, window in bbox_windows(img, text_probability, bbox):
-        features = get_features_for_window(dictionary,
-                                           cut_character(window))[1].flatten()
+        features = get_features_for_window(cut_character(window))[1].\
+            reshape(1, -1)
 
         character_probabilities[y, x] = model.decision_function(features)
         characters[y, x] = model.predict(features)

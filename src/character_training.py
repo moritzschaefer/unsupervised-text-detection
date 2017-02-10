@@ -21,7 +21,8 @@ logging.basicConfig(level=logging.INFO)
 def square_patch(img, mode='black'):
     '''
     mode can be 'black', 'fill' and 'random'
-    TODO random not working cause of missing last_image
+    TODO random not working cause of missing last_image. maybe just disable that
+    option
     '''
     target_img = np.zeros(shape=(32, 32, 3), dtype='uint8')
     scale = 32.0/max(img.shape[:2])
@@ -32,17 +33,16 @@ def square_patch(img, mode='black'):
 
     try:
         resized = cv2.resize(img, None, fx=scale, fy=scale,
-                                interpolation=interpolation)
+                             interpolation=interpolation)
     except Exception as e:
         logging.warning('Error squaring patch: {}'.format(e))
         raise
 
-
     y_start = int((32-resized.shape[0])/2)
     x_start = int((32-resized.shape[1])/2)
     target_img[y_start:y_start+resized.shape[0],
-                x_start:x_start+resized.shape[1],
-                :] = resized
+               x_start:x_start+resized.shape[1],
+               :] = resized
 
     # extend the empty areas at top and bottom with repetition
     if mode == 'fill':
@@ -53,7 +53,8 @@ def square_patch(img, mode='black'):
 
     # extend the empty areas at the sides with random characters
     if x_start > 0:
-        if mode == 'random' and last_image != None:
+        last_image = None
+        if mode == 'random' and last_image != None:  # noqa
             # use last character (as they are not sorted, it's OK)
             try:
                 start_index = random.randint(0, last_image.shape[1]-x_start-1)
@@ -81,7 +82,6 @@ def square_patches(path, target):
     '''
     Converts all images to 32x32 patches and moves them to the target directory
     '''
-    last_image = None
     for (dirpath, dirnames, filenames) in os.walk(os.path.join(path, 'char')):
         for name in filenames:
             source_filename = os.path.join(dirpath, name)
@@ -92,12 +92,11 @@ def square_patches(path, target):
                         exist_ok=True)
             try:
                 cv2.imwrite(os.path.join(target,
-                                        os.path.relpath(dirpath, path),
-                                        name),
+                                         os.path.relpath(dirpath, path),
+                                         name),
                             square_patch(img))
             except Exception as e:
                 logging.warn('Exception for {}: {}'.format(name, e))
-
 
 
 def create_data_set(dir, label_file):
@@ -110,13 +109,11 @@ def create_data_set(dir, label_file):
             extracted_features = extract_feature_vector(os.path.join(dir,
                                                                      filename))
         except FileNotFoundError:  # noqa
-            import ipdb
-            ipdb.set_trace()
             logging.warn('Could not find file {}. Skip'.format(filename))
+            raise
         except Exception as e:
             logging.warn('error: {}'.format(e))
-            import ipdb
-            ipdb.set_trace()
+            raise
         else:
             labels.append(child.attrib['tag'])
             features.append(extracted_features[1].flatten())
@@ -132,7 +129,8 @@ def extract_feature_vector(filename):
     try:
         return get_features_for_window(filename)
     except ValueError as e:
-        print('file {} couldn\'t be read: {}'.format(filename, e.message))
+        print('file {} couldn\'t be read: {}'.format(filename, e))
+        raise
 
 
 def train_character_svm(features, labels):

@@ -47,8 +47,8 @@ def prepare_tr_training_data(text_windows_path, n_text_windows_path):
     n_text = 0
     for window in text_windows:
         w = np.load(window)
-        # check for right dimensionality
-        if w.shape == (3, 3, config.NUM_D):
+        # check for correct dimensionality
+        if w.shape[:2] == (3, 3):
             X.append(np.array(w).flatten())
             n_text += 1
         else:
@@ -57,8 +57,8 @@ def prepare_tr_training_data(text_windows_path, n_text_windows_path):
     n_ntext = 0
     for window in ntext_windows:
         w = np.load(window)
-        # check for right dimensionality
-        if w.shape == (3, 3, config.NUM_D):
+        # check for correct dimensionality
+        if w.shape[:2] == (3, 3):
             X.append(np.array(w).flatten())
             n_ntext += 1
         else:
@@ -70,11 +70,13 @@ def prepare_tr_training_data(text_windows_path, n_text_windows_path):
 
     return shuffle(np.array(X), np.array(y))
 
+
 # train model
-def train_tr_model(X, y, verbose = 0):
+def train_tr_model(X, y, verbose=0):
 
     # train test split
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=7)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20,
+                                                        random_state=7)
 
     # crossvalidation
     cv = ShuffleSplit(n_splits=5, test_size=0.2, random_state=7)

@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 def get_z(x):
-    if not get_z.dictionary:
+    if not type(get_z.dictionary) is np.array:
         get_z.dictionary = np.load(config.DICT_PATH)
 
     # x should be in dimension 64x1
@@ -88,9 +88,6 @@ def get_features_for_window(window):
         z.append(row)
 
     z = np.array(z)
-
-    if z.shape != (25, 25, config.NUM_D):
-        return (False, z.shape)
 
     # drop most outer lines
     z = z[0:-1, 0:-1]

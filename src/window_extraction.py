@@ -77,7 +77,7 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
         return
 
     img = cv2.imread(path)
-    #img = preprocessing.preprocess(img)
+    # img = preprocessing.preprocess(img)
 
     # check for img reading errors
     if img is None:
@@ -86,7 +86,7 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
     if plot:
         import matplotlib.pyplot as plt
         import matplotlib.patches as patches
-        fig,ax = plt.subplots(1)
+        fig, ax = plt.subplots(1)
         ax.imshow(img)
 
     if text:

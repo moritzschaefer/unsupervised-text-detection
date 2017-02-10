@@ -101,7 +101,7 @@ def train_tr_model(X, y, verbose = 0):
     model = CalibratedClassifierCV(svm.LinearSVC(C=best_C))
     model.fit(X_train, y_train)
 
-    logging.info("Prediction score: ".format(model.score(X_test, y_test)))
+    logging.info("Prediction score: {}".format(model.score(X_test, y_test)))
     #print(model.predict_proba(X_test))
 
     return model

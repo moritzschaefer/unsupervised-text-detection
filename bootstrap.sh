@@ -44,18 +44,18 @@ cd ../src
 echo "run training module"
 
 echo "run patch extraction"
-python3 random_patch_extraction.py
+#python3 random_patch_extraction.py
 
 echo "run feature_learning"
-python3 feature_learning.py
+#python3 feature_learning.py
 
 echo "run window extraction"
 #python3 window_extraction.py
 
 echo "run feature extraction"
-#python3 feature_extraction.py
+python3 feature_extraction.py
 
 echo "run text_recognition"
-#python3 text_recognition.py
+python3 text_recognition.py
 
 echo "python3 character_training.py"

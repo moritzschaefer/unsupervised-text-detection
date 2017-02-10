@@ -132,5 +132,5 @@ if __name__ == "__main__":
     text_windows = os.path.join(config.WINDOW_PATH, 'true/')
     ntext_windows = os.path.join(config.WINDOW_PATH, 'false/')
 
-    create_features_for_all_windows(text_windows, True, n_jobs=6)
-    create_features_for_all_windows(ntext_windows, False, n_jobs=6)
+    create_features_for_all_windows(text_windows, True, n_jobs=8)
+    create_features_for_all_windows(ntext_windows, False, n_jobs=8)

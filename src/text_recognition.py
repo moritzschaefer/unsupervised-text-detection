@@ -9,7 +9,6 @@ import logging
 
 import numpy as np
 import config
-import matplotlib.pyplot as plt
 
 from sklearn import svm
 from sklearn.utils import shuffle

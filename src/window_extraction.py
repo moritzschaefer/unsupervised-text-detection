@@ -10,8 +10,6 @@ import pickle
 import xml.etree.ElementTree
 import logging
 from pathlib import Path
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 import cv2
 import random
 
@@ -51,6 +49,8 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
     Return random windows for given image
     WINDOWS ARE NOT PREPROCESSED!
     '''
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as patches
 
     #find path folder/image
     meta_name = Path(path).parts[-2] + '/' + Path(path).parts[-1]

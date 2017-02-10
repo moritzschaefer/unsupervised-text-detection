@@ -4,12 +4,12 @@ import pickle
 import xml.etree.ElementTree as ET
 import logging
 import random
+import sys
 
 import cv2
 import numpy as np
 from sklearn.svm import LinearSVC
 import sklearn
-import matplotlib.pyplot as plt
 
 from feature_extraction import get_features_for_window
 from plot_confusion_matrix import plot_confusion_matrix
@@ -108,6 +108,11 @@ def create_data_set(dir, label_file):
         try:
             extracted_features = extract_feature_vector(os.path.join(dir,
                                                                      filename))
+            if not extracted_features[0]:
+                import ipdb
+                ipdb.set_trace()
+                continue
+
         except FileNotFoundError:  # noqa
             logging.warn('Could not find file {}. Skip'.format(filename))
             raise
@@ -217,7 +222,9 @@ if __name__ == "__main__":
 
     # plot
     # Plot non-normalized confusion matrix
-    plt.figure()
-    plot_confusion_matrix(c_matrix, classes=label_set,
-                          title='Confusion matrix, without normalization')
-    plt.show()
+    if len(sys.argv) > 1:
+        import matplotlib.pyplot as plt
+        plt.figure()
+        plot_confusion_matrix(c_matrix, classes=label_set,
+                            title='Confusion matrix, without normalization')
+        plt.show()

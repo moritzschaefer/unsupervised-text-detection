@@ -1,15 +1,18 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import itertools
+
 
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
-                          cmap=plt.cm.Blues):
+                          cmap=None):
     """
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
     """
+    import matplotlib.pyplot as plt
+    if not cmap:
+        cmap = plt.cm.Blues
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()

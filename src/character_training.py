@@ -109,8 +109,6 @@ def create_data_set(dir, label_file):
             extracted_features = extract_feature_vector(os.path.join(dir,
                                                                      filename))
             if not extracted_features[0]:
-                import ipdb
-                ipdb.set_trace()
                 continue
 
         except FileNotFoundError:  # noqa
@@ -217,8 +215,8 @@ if __name__ == "__main__":
                                                 predicted_labels,
                                                 label_set)
 
-    logging.info('Printing confusion matrix')
-    print(c_matrix)
+    logging.info('Saving confusion matrix')
+    np.save(config.CONFUSION_MATRIX_PATH, c_matrix)
 
     # plot
     # Plot non-normalized confusion matrix

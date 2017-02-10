@@ -3,6 +3,7 @@
 import os
 from multiprocessing.pool import Pool
 import pickle
+import logging
 
 import cv2
 import numpy as np
@@ -13,6 +14,7 @@ import feature_extraction
 import config
 from character_recognition import character_recognition
 
+logging.basicConfig(level=logging.INFO)
 
 # get all windows of a image
 def sliding_window(img, model, step_size=1):
@@ -44,22 +46,29 @@ def get_prediction_values(img, model, step_size=1):
     layer
     '''
     layers = []
-    for layer_img in get_all_layers(img):
+    for i, layer_img in enumerate(get_all_layers(img)):
         pool = Pool(processes=8)
-        values = np.zeros(shape=[img.shape[0], img.shape[1]],
+        values = np.zeros(shape=[layer_img.shape[0], layer_img.shape[1]],
                           dtype='float')
-
+        pixel_counter = 0
+        logging.info('started for layer {}'.format(i))
         for x, y, v in pool.imap(async_predict,
                                  sliding_window(layer_img.astype('float32'),
                                                 model,
                                                 step_size),
                                  8):
             values[y:y+step_size+32, x:x+step_size+32] += v
-
+            if (pixel_counter) % 1000 == 0:
+                logging.info("pixel_counter: {}/{} from layer {}".
+                format(pixel_counter,
+                       (layer_img.shape[0]*layer_img.shape[1])//step_size**2,
+                       i))
+            pixel_counter += 1
         pool.close()
         pool.join()
 
         layers.append((layer_img.astype('float32'), values))
+        logging.info('finished layer {}'.format(i))
     return layers
 
 
@@ -76,10 +85,10 @@ def get_all_layers(img):
 
 def predict_images(step_size=1):
     text_model = pickle.load(open(config.TEXT_MODEL_PATH, 'rb'))  # get model
-    character_model = load_model()
+    #character_model = load_model()
     dictionary = np.load(config.DICT_PATH)  # get dictionary
     # image_files = glob.glob(os.path.join(config.TEST_IMAGE_PATH, '*.jpg'))
-    image_files = [os.path.join(config.TEST_IMAGE_PATH, '111-1137_IMG.jpg')]
+    image_files = [os.path.join(config.TEST_IMAGE_PATH, 'test2.png')]
 
     for filename in image_files:
         img = cv2.imread(filename)
@@ -93,7 +102,8 @@ def predict_images(step_size=1):
             print('Calculate Characters for layer {}'.format(layer_img.shape))
             texts = character_recognition(layer_img, layer_predictions,
                                           dictionary, character_model)
-
+            np.save('../data/test_images/{}_prediction.npy'.format(filename.split('/')[-1].split('.')[0]),
+                                                            layer_predictions)
             print(texts)
         # combine_probability_layers(img, predicted_layers)
 

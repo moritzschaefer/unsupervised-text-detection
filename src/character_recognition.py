@@ -110,11 +110,12 @@ def predict_bbox(img, text_probability, bbox, dictionary, model):
         features = get_features_for_window(cut_character(window))[1].\
             reshape(1, -1)
 
-        character_probabilities[y, x] = model.decision_function(features)
-        characters[y, x] = model.predict(features)
+        character_probabilities[y, x] = max(model.decision_function(features)[0])
+
+        characters[y, x] = model.predict(features)[0]
 
     # TODO now filter the responses..
-    vertical_maxima = characters[character_probabilities.argmax(axis=0)]
+    vertical_maxima = characters[character_probabilities.argmax(axis=0),  np.array(range(0, character_probabilities.shape[1]))]
 
     return vertical_maxima
 

@@ -58,7 +58,7 @@ def get_prediction_values(img, model, step_size=1):
                                                 step_size),
                                  8):
             values[y:y+step_size+32, x:x+step_size+32] += v
-            if (pixel_counter) % 1000 == 0:
+            if (pixel_counter) % 100 == 0:
                 logging.info("pixel_counter: {}/{} from layer {}".
                 format(pixel_counter,
                        (layer_img.shape[0]*layer_img.shape[1])//step_size**2,
@@ -83,9 +83,9 @@ def get_all_layers(img):
         yield resized
 
 
-def predict_images(step_size=1):
+def predict_images(step_size=1, plot=True):
     text_model = pickle.load(open(config.TEXT_MODEL_PATH, 'rb'))  # get model
-    #character_model = load_model()
+    character_model = load_model()
     dictionary = np.load(config.DICT_PATH)  # get dictionary
     # image_files = glob.glob(os.path.join(config.TEST_IMAGE_PATH, '*.jpg'))
     image_files = [os.path.join(config.TEST_IMAGE_PATH, 'test2.png')]
@@ -95,10 +95,11 @@ def predict_images(step_size=1):
         predicted_layers = get_prediction_values(img, text_model, step_size)
         for layer_img, layer_predictions in predicted_layers:
             # compute
-            cv2.imshow("image 1", layer_img)
-            cv2.imshow("image 2", layer_predictions/layer_predictions.max())
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+            if plot:
+                cv2.imshow("image 1", layer_img)
+                cv2.imshow("image 2", layer_predictions/layer_predictions.max())
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
             print('Calculate Characters for layer {}'.format(layer_img.shape))
             texts = character_recognition(layer_img, layer_predictions,
                                           dictionary, character_model)
@@ -139,4 +140,4 @@ def combine_probability_layers(img, layers):
     return text_probability_image
 
 if __name__ == "__main__":
-    predict_images(config.STEP_SIZE)
+    predict_images(config.STEP_SIZE, plot=False)

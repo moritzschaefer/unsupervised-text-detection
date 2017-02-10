@@ -20,21 +20,25 @@ def sliding_window(img, model, step_size=1):
         for x in range(0, img.shape[1]-32, step_size):
             yield (x,
                    y,
-                   img[y:min(y+32, img.shape[0]), x:min(x+32, img.shape[1]), :],
+                   img[y:min(y+32, img.shape[0]),
+                       x:min(x+32, img.shape[1]),
+                       :],
                    model)
 
 
 def async_predict(args):
     x, y, window, model = args
-    print(x, y)
     features = feature_extraction.\
-        get_features_for_window(window.astype('float32'))
+        get_features_for_window(window)
     # reshape it so it contains a single sample
-    v = model.predict_proba(features[1].flatten().reshape(1, -1))
+    try:
+        v = model.predict_proba(features[1].flatten().reshape(1, -1))
+    except:
+        pass
     return x, y, v[0][1]
 
 
-def get_prediction_values(img, model):
+def get_prediction_values(img, model, step_size=1):
     '''
     Calculate the text text_recognition probabilities for each pixel for each
     layer
@@ -42,18 +46,20 @@ def get_prediction_values(img, model):
     layers = []
     for layer_img in get_all_layers(img):
         pool = Pool(processes=8)
-        values = np.zeros(shape=[img.shape[0]-31, img.shape[1]-31],
+        values = np.zeros(shape=[img.shape[0], img.shape[1]],
                           dtype='float')
 
         for x, y, v in pool.imap(async_predict,
-                                 sliding_window(layer_img, model, 8), 8):
-            print(v)
-            values[y, x] = v
+                                 sliding_window(layer_img.astype('float32'),
+                                                model,
+                                                step_size),
+                                 8):
+            values[y:y+step_size+32, x:x+step_size+32] += v
 
         pool.close()
         pool.join()
 
-        layers.append((layer_img, values))
+        layers.append((layer_img.astype('float32'), values))
     return layers
 
 
@@ -68,7 +74,7 @@ def get_all_layers(img):
         yield resized
 
 
-def predict_images():
+def predict_images(step_size=1):
     text_model = pickle.load(open(config.TEXT_MODEL_PATH, 'rb'))  # get model
     character_model = load_model()
     dictionary = np.load(config.DICT_PATH)  # get dictionary
@@ -77,20 +83,18 @@ def predict_images():
 
     for filename in image_files:
         img = cv2.imread(filename)
-        predicted_layers = get_prediction_values(img, text_model)
+        predicted_layers = get_prediction_values(img, text_model, step_size)
         for layer_img, layer_predictions in predicted_layers:
             # compute
+            cv2.imshow("image 1", layer_img)
+            cv2.imshow("image 2", layer_predictions/layer_predictions.max())
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
             print('Calculate Characters for layer {}'.format(layer_img.shape))
             texts = character_recognition(layer_img, layer_predictions,
                                           dictionary, character_model)
 
             print(texts)
-            cv2.imshow("image 1", layer_img)
-            cv2.imshow("image 2", layer_predictions)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-
-
         # combine_probability_layers(img, predicted_layers)
 
 
@@ -125,4 +129,4 @@ def combine_probability_layers(img, layers):
     return text_probability_image
 
 if __name__ == "__main__":
-    predict_images()
+    predict_images(config.STEP_SIZE)

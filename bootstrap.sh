@@ -5,6 +5,8 @@ echo "This script downloads/unpacks data and runs everything"
 mkdir -p data
 cd data
 
+rm -rf patches windows features
+
 mkdir -p patches
 mkdir -p windows/true
 mkdir -p windows/false
@@ -13,6 +15,12 @@ mkdir -p features/true
 mkdir -p features/false
 
 echo "download necessary data files"
+if [ ! -f "chars74k.tgz" ]
+then
+  curl "http://www.ee.surrey.ac.uk/CVSSP/demos/chars74k/EnglishImg.tgz" -o "chars74k.tgz"
+  tar -xzvf chars74k.tgz
+fi
+
 
 if [ ! -f "word.zip" ]
 then

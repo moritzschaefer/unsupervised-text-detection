@@ -4,6 +4,7 @@ import pickle
 import xml.etree.ElementTree as ET
 import logging
 import random
+import time
 import sys
 import re
 
@@ -184,13 +185,12 @@ def train_character_svm(features, labels):
 
     # model
     model = LinearSVC(penalty='l2',
-                      loss='squared_hinge',
                       dual=True,
                       tol=0.0001,
                       multi_class='ovr',
                       fit_intercept=True,
                       intercept_scaling=1,
-                      class_weight=None,
+                      class_weight='balanced',
                       verbose=0,
                       random_state=None,
                       max_iter=1000)
@@ -211,14 +211,13 @@ def train_character_svm(features, labels):
     best_C = classifier.best_params_['C']
     best_model = CalibratedClassifierCV(LinearSVC(LinearSVC(
         penalty='l2',
-        loss='squared_hinge',
         dual=True,
         tol=0.0001,
         C=best_C,
         multi_class='ovr',
         fit_intercept=True,
         intercept_scaling=1,
-        class_weight=None,
+        class_weight='balanced',
         verbose=0,
         random_state=None,
         max_iter=4000))

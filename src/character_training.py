@@ -209,7 +209,7 @@ def train_character_svm(features, labels):
     logging.info("GridSearch done, time: {t}s".format(t = end - start))
 
     best_C = classifier.best_params_['C']
-    best_model = CalibratedClassifierCV(LinearSVC(LinearSVC(
+    best_model = CalibratedClassifierCV(LinearSVC(
         penalty='l2',
         dual=True,
         tol=0.0001,
@@ -220,7 +220,7 @@ def train_character_svm(features, labels):
         class_weight='balanced',
         verbose=0,
         random_state=None,
-        max_iter=4000))
+        max_iter=4000)
     )
 
     # check features.shape = [n_samples, n_features]

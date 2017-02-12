@@ -49,8 +49,6 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
     Return random windows for given image
     WINDOWS ARE NOT PREPROCESSED!
     '''
-    import matplotlib.pyplot as plt
-    import matplotlib.patches as patches
 
     #find path folder/image
     meta_name = Path(path).parts[-2] + '/' + Path(path).parts[-1]
@@ -79,14 +77,16 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
         return
 
     img = cv2.imread(path)
-    #img = preprocessing.preprocess(img)
+    # img = preprocessing.preprocess(img)
 
     # check for img reading errors
     if img is None:
         return
 
     if plot:
-        fig,ax = plt.subplots(1)
+        import matplotlib.pyplot as plt
+        import matplotlib.patches as patches
+        fig, ax = plt.subplots(1)
         ax.imshow(img)
 
     if text:

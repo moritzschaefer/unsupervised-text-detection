@@ -4,12 +4,19 @@ import pickle
 import xml.etree.ElementTree as ET
 import logging
 import random
+import time
 import sys
+import re
 
 import cv2
 import numpy as np
 from sklearn.svm import LinearSVC
+from sklearn.metrics import f1_score
 import sklearn
+from sklearn.model_selection import ShuffleSplit
+from sklearn.model_selection import GridSearchCV
+#test
+from sklearn.calibration import CalibratedClassifierCV
 
 from feature_extraction import get_features_for_window
 from plot_confusion_matrix import plot_confusion_matrix
@@ -78,11 +85,11 @@ def square_patch(img, mode='black'):
     return target_img
 
 
-def square_patches(path, target):
+def square_patches(path, target, addition='char'):
     '''
     Converts all images to 32x32 patches and moves them to the target directory
     '''
-    for (dirpath, dirnames, filenames) in os.walk(os.path.join(path, 'char')):
+    for (dirpath, dirnames, filenames) in os.walk(os.path.join(path, addition)):
         for name in filenames:
             source_filename = os.path.join(dirpath, name)
 
@@ -99,18 +106,20 @@ def square_patches(path, target):
                 logging.warn('Exception for {}: {}'.format(name, e))
 
 
-def create_data_set(dir, label_file):
+def create_data_set(dir, label_file, *other_dirs):
+    re_classes = '[0-9A-Za-z]'
     tree = ET.parse(label_file)
     labels = []
     features = []
     for child in tree.getroot():
         filename = child.attrib['file']
         try:
+            tag = child.attrib['tag']
+            if not re.match(re_classes, tag):
+                continue
             extracted_features = extract_feature_vector(os.path.join(dir,
                                                                      filename))
             if not extracted_features[0]:
-                import ipdb
-                ipdb.set_trace()
                 continue
 
         except FileNotFoundError:  # noqa
@@ -120,12 +129,41 @@ def create_data_set(dir, label_file):
             logging.warn('error: {}'.format(e))
             raise
         else:
-            labels.append(child.attrib['tag'])
+            labels.append(tag)
             features.append(extracted_features[1].flatten())
 
-    # np.savetxt(FEATURE_FILE, np.array(features))
-    # with open(LABEL_FILE, 'w') as f:
-    #     f.writelines(labels)
+    # Chars74K
+    for other_dir in other_dirs:
+        for (dirpath, dirnames, filenames) in os.walk(other_dir):
+            try:
+                label = int(dirpath[-3:])
+                print(label)
+            except Exception as e:
+                print(e)
+                continue
+
+            if label <= 10:
+                char = chr(label+47)
+            elif label <= 36:
+                char = chr(label+54)
+            elif label <= 62:
+                char = chr(label+60)
+            else:
+                logging.warn('Impossible class found: {}'.format(dirpath))
+                continue
+
+            for name in filenames:
+                source_filename = os.path.join(dirpath, name)
+                extracted_features = extract_feature_vector(source_filename)
+
+                if not extracted_features[0]:
+                    logging.warn('Feature extraction fail for file {}'.
+                                 format(source_filename))
+                    continue
+
+                else:
+                    labels.append(char)
+                    features.append(extracted_features[1].flatten())
 
     return features, labels
 
@@ -139,21 +177,55 @@ def extract_feature_vector(filename):
 
 
 def train_character_svm(features, labels):
+    # crossvalidation
+    cv = ShuffleSplit(n_splits=5, test_size=0.2, random_state=7)
+
+    # paramgrid
+    param_grid=[{'C': [2**x for x in config.C_RANGE]}]
+
+    # model
     model = LinearSVC(penalty='l2',
-                      loss='squared_hinge',
                       dual=True,
                       tol=0.0001,
-                      C=1.0,
                       multi_class='ovr',
                       fit_intercept=True,
                       intercept_scaling=1,
-                      class_weight=None,
+                      class_weight='balanced',
                       verbose=0,
                       random_state=None,
                       max_iter=1000)
+
+    # gridsearch
+    start = time.time()
+    classifier = GridSearchCV(estimator=model,
+                              cv=cv,
+                              param_grid=param_grid,
+                              refit=True,
+                              verbose=3,
+                              n_jobs=8)
+    classifier.fit(features, labels)
+    end = time.time()
+
+    logging.info("GridSearch done, time: {t}s".format(t = end - start))
+
+    best_C = classifier.best_params_['C']
+    best_model = CalibratedClassifierCV(LinearSVC(
+        penalty='l2',
+        dual=True,
+        tol=0.0001,
+        C=best_C,
+        multi_class='ovr',
+        fit_intercept=True,
+        intercept_scaling=1,
+        class_weight='balanced',
+        verbose=0,
+        random_state=None,
+        max_iter=4000)
+    )
+
     # check features.shape = [n_samples, n_features]
-    model.fit(features, labels)
-    return model
+    best_model.fit(features, labels)
+    return best_model
 
 
 def load_model():
@@ -169,14 +241,30 @@ def _save_model(model):
 
 def train_model():
     # create training set and fit model
+    # ICDAR
     square_patches(os.path.join(config.DATA_DIR, 'character_icdar_train/'),
                    os.path.join(config.DATA_DIR,
                                 'character_icdar_train/extracted/'))
     logging.info('Created square patches. Extracting training data set')
+
+    # chars74KEnglish/Img/GoodImg/Bmp
+    square_patches(os.path.join(config.DATA_DIR, 'English/Img/GoodImg/Bmp'),
+                   os.path.join(config.DATA_DIR, 'chars74k/extracted/'), '')
+    square_patches(os.path.join(config.DATA_DIR, 'English/Img/BadImag/Bmp'),
+                   os.path.join(config.DATA_DIR, 'chars74k/extracted2/'), '')
+
     features, labels = create_data_set(
         os.path.join(config.DATA_DIR, 'character_icdar_train/extracted/'),
-        os.path.join(config.DATA_DIR, 'character_icdar_train/char.xml'))
-    logging.info('Created training data set. Now training SVM')
+        os.path.join(config.DATA_DIR, 'character_icdar_train/char.xml'),
+        os.path.join(config.DATA_DIR, 'chars74k/extracted/'),
+        os.path.join(config.DATA_DIR, 'chars74k/extracted2/')
+    )
+    logging.info('Created training data set. Save training data')
+    with open('training_set.pkl', 'wb') as f:
+        pickle.dump((features, labels), f)
+    logging.info('Training data saved. Training SVM...')
+
+    # Now Grid search best C
     model = train_character_svm(features, labels)
     logging.info('Trained model')
     return model
@@ -216,9 +304,11 @@ if __name__ == "__main__":
     c_matrix = sklearn.metrics.confusion_matrix(test_labels,
                                                 predicted_labels,
                                                 label_set)
+    print('F1 Score: {}'.format(f1_score(test_labels, predicted_labels)))
 
-    logging.info('Printing confusion matrix')
-    print(c_matrix)
+
+    logging.info('Saving confusion matrix')
+    np.save(config.CONFUSION_MATRIX_PATH, c_matrix)
 
     # plot
     # Plot non-normalized confusion matrix
@@ -226,5 +316,5 @@ if __name__ == "__main__":
         import matplotlib.pyplot as plt
         plt.figure()
         plot_confusion_matrix(c_matrix, classes=label_set,
-                            title='Confusion matrix, without normalization')
+                              title='Confusion matrix, without normalization')
         plt.show()

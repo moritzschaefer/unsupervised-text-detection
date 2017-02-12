@@ -1,0 +1,42 @@
+<?xml version="1" encoding="ISO-8859-1"?>
+<tagset>
+  <image>
+    <imageName>test1.png</imageName>
+    <resolution x="452" y="205" />
+    <taggedRectangles>
+      <taggedRectangle x="6" y="148" width="315" height="39" offset="0" rotation="0" userName="admin" />
+      <taggedRectangle x="334" y="146" width="92" height="38" offset="0" rotation="0" userName="admin" />
+    </taggedRectangles>
+  </image>
+  <image>
+    <imageName>test2.png</imageName>
+    <resolution x="221" y="182" />
+    <taggedRectangles>
+      <taggedRectangle x="65" y="14" width="143" height="35" offset="0" rotation="0" userName="admin" />
+    </taggedRectangles>
+  </image>
+  <image> × 
+    <imageName>test3.png</imageName>
+    <resolution x="248" y="227" />
+    <taggedRectangles>
+      <taggedRectangle x="114" y="6" width="48" height="23" offset="0" rotation="0" userName="admin" />
+      <taggedRectangle x="169" y="1" width="62" height="27" offset="0" rotation="0" userName="admin" />
+      <taggedRectangle x="131" y="33" width="87" height="35" offset="0" rotation="0" userName="admin" />
+    </taggedRectangles>
+  </image>
+  <image>
+    <imageName>test4.png</imageName>
+    <resolution x="333" y="218" />
+    <taggedRectangles>
+      <taggedRectangle x="18" y="76" width="240" height="50" offset="0" rotation="0" userName="admin" />
+    </taggedRectangles>
+  </image>
+  <image>
+    <imageName>test5.png</imageName>
+    <resolution x="393" y="252" />
+    <taggedRectangles>
+      <taggedRectangle x="20" y="138" width="150" height="50" offset="0" rotation="0" userName="admin" />
+      <taggedRectangle x="188" y="138" width="185" height="50" offset="0" rotation="0" userName="admin" />
+    </taggedRectangles>
+  </image>
+</tagset>

@@ -4,6 +4,7 @@ import os
 from multiprocessing.pool import Pool
 import pickle
 import logging
+import glob
 
 import cv2
 import numpy as np
@@ -58,10 +59,11 @@ def get_prediction_values(img, model, step_size=1):
                                                 step_size),
                                  8):
             values[y:y+step_size+32, x:x+step_size+32] += v
+
             if (pixel_counter) % 100 == 0:
                 logging.info("pixel_counter: {}/{} from layer {}".
                 format(pixel_counter,
-                       (layer_img.shape[0]*layer_img.shape[1])//step_size**2,
+                       ((layer_img.shape[0] - 31) *(layer_img.shape[1] - 31))//step_size**2,
                        i))
             pixel_counter += 1
         pool.close()
@@ -83,15 +85,18 @@ def get_all_layers(img):
         yield resized
 
 
-def predict_images(step_size=1, plot=True):
+def predict_images(step_size=1, plot=True, character=True):
     text_model = pickle.load(open(config.TEXT_MODEL_PATH, 'rb'))  # get model
-    character_model = load_model()
+    if character:
+        character_model = load_model()
     dictionary = np.load(config.DICT_PATH)  # get dictionary
-    # image_files = glob.glob(os.path.join(config.TEST_IMAGE_PATH, '*.jpg'))
-    image_files = [os.path.join(config.TEST_IMAGE_PATH, 'test2.png')]
+    image_files = glob.glob(os.path.join(config.TEST_IMAGE_PATH, '*.png'))
+    #image_files = [os.path.join(config.TEST_IMAGE_PATH, 'test3.png')]
 
     for filename in image_files:
         img = cv2.imread(filename)
+        logging.info('started computation for img {}'.format(filename.split('/')[-1].split('.')[0]))
+
         predicted_layers = get_prediction_values(img, text_model, step_size)
         for layer_img, layer_predictions in predicted_layers:
             # compute
@@ -100,12 +105,19 @@ def predict_images(step_size=1, plot=True):
                 cv2.imshow("image 2", layer_predictions/layer_predictions.max())
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
-            print('Calculate Characters for layer {}'.format(layer_img.shape))
-            texts = character_recognition(layer_img, layer_predictions,
+
+
+            np.save('../data/test_images/test_set/{}_prediction.npy'.format(
+                            filename.split('/')[-1].split('.')[0]),
+                                                layer_predictions)
+
+            if character:
+                print('Calculate Characters for layer {}'.format(
+                                          layer_img.shape))
+                texts = character_recognition(layer_img, layer_predictions,
                                           dictionary, character_model)
-            np.save('../data/test_images/{}_prediction.npy'.format(filename.split('/')[-1].split('.')[0]),
-                                                            layer_predictions)
-            print(texts)
+
+                print(texts)
         # combine_probability_layers(img, predicted_layers)
 
 
@@ -140,4 +152,4 @@ def combine_probability_layers(img, layers):
     return text_probability_image
 
 if __name__ == "__main__":
-    predict_images(config.STEP_SIZE, plot=False)
+    predict_images(config.STEP_SIZE, plot=False, character=False)

@@ -14,7 +14,7 @@ FEATURE_PATH = os.path.join(BASE_DIR, 'data/features/')
 CHARACTER_MODEL_PATH = os.path.join(BASE_DIR, 'data/character_model.pkl')
 NUM_PATCHES_PER_TEXT = 200  # TODO this should be >100, for classification training purposes 30 atm
 TEXT_MODEL_PATH = os.path.join(BASE_DIR, 'data/text_model.pkl')
-TEST_IMAGE_PATH = os.path.join(BASE_DIR, 'data/test_images/')
+TEST_IMAGE_PATH = os.path.join(BASE_DIR, 'data/test_images/test_set/')
 TOTAL_WINDOWS_FOR_TRAINING = 60000 #min is 251
 ALPHA = .5 #hyperparam from feature extraction #TODO tune this in crossval
 
@@ -22,7 +22,7 @@ NUM_D = 1000  # number of dictionary entries
 
 
 # the thresholds depend on STEP_SIZE
-STEP_SIZE = 4
+STEP_SIZE = 2
 TEXT_RECOGNITION_THRESHOLD = 36*4/STEP_SIZE
 # 90%  of a TR-threshold should be matched at least in average
 BOUNDING_BOX_THRESHOLD =  32*32*TEXT_RECOGNITION_THRESHOLD*0.9

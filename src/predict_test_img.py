@@ -90,7 +90,7 @@ def predict_images(step_size=1, plot=True, character=True):
     if character:
         character_model = load_model()
     dictionary = np.load(config.DICT_PATH)  # get dictionary
-    image_files = glob.glob(os.path.join(config.TEST_IMAGE_PATH, '*.png'))
+    image_files = glob.glob(os.path.join(config.TEST_IMAGE_PATH + '/test_set/', '*.png'))
     #image_files = [os.path.join(config.TEST_IMAGE_PATH, 'test3.png')]
 
     for filename in image_files:

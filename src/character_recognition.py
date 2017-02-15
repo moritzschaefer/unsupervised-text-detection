@@ -116,7 +116,7 @@ def predict_window(args):
     y, x, window, model = args
     features = get_features_for_window(cut_character(window))[1].reshape(1, -1)
 
-    score = max(model.decision_function(features)[0])
+    score = model.predict_proba(features).max()
 
     prediction = model.predict(features)[0]
 

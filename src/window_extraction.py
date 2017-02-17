@@ -87,7 +87,8 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
         import matplotlib.pyplot as plt
         import matplotlib.patches as patches
         fig, ax = plt.subplots(1)
-        ax.imshow(img)
+        plot_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        ax.imshow(plot_img)
 
     if text:
         n_boxes = len(text_boxes)
@@ -128,6 +129,7 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
             if plot:
                 rect = patches.Rectangle((window[0], window[1]),32,32,linewidth=1,edgecolor='r',facecolor='none')
                 ax.add_patch(rect)
+
             np.save('{}/true/{}.npy'.format(config.WINDOW_PATH, uuid4()), window[2])
 
     else:
@@ -169,9 +171,13 @@ def extract_random_windows(path, stepSize, windowSize, windows, xmlDic, text, pl
             if plot:
                 rect = patches.Rectangle((window[0], window[1]),32,32,linewidth=1,edgecolor='r',facecolor='none')
                 ax.add_patch(rect)
+
             np.save('{}/false/{}.npy'.format(config.WINDOW_PATH, uuid4()), window[2])
 
         if plot:
+            plt.yticks([])
+            plt.xticks([])
+            plt.savefig('without_text_window.png', transparent=True)
             plt.show()
 
 

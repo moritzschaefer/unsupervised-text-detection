@@ -91,7 +91,7 @@ def predict_images(step_size=1, plot=True, character=True):
         character_model = load_model()
     dictionary = np.load(config.DICT_PATH)  # get dictionary
     image_files = glob.glob(os.path.join(config.TEST_IMAGE_PATH, '*.png'))
-    #image_files = [os.path.join(config.TEST_IMAGE_PATH, 'test3.png')]
+    #image_files = [os.path.join(config.TEST_IMAGE_PATH, 'test1.png')]
 
     for filename in image_files:
         img = cv2.imread(filename)

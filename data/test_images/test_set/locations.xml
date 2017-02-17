@@ -28,7 +28,7 @@
     <imageName>test4.png</imageName>
     <resolution x="333" y="218" />
     <taggedRectangles>
-      <taggedRectangle x="18" y="76" width="240" height="50" offset="0" rotation="0" userName="admin" />
+      <taggedRectangle x="13" y="52" width="158" height="32" offset="0" rotation="0" userName="admin" />
     </taggedRectangles>
   </image>
   <image>

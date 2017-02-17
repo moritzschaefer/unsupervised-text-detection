@@ -25,8 +25,6 @@ NUM_D = 1000  # number of dictionary entries
 # the thresholds depend on STEP_SIZE
 STEP_SIZE = 2
 TEXT_RECOGNITION_THRESHOLD = 36*4/STEP_SIZE
-# 90%  of a TR-threshold should be matched at least in average
-BOUNDING_BOX_THRESHOLD =  32*32*TEXT_RECOGNITION_THRESHOLD*0.9
 
 RESIZE_WORDS_FOR_DIC = True
 

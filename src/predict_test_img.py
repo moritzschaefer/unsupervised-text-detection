@@ -36,8 +36,9 @@ def async_predict(args):
     # reshape it so it contains a single sample
     try:
         v = model.predict_proba(features[1].flatten().reshape(1, -1))
-    except:
-        pass
+    except Exception as e:
+        print(x, y, e)
+        return x, y, 0
     return x, y, v[0][1]
 
 

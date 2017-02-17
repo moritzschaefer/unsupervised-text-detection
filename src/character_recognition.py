@@ -27,7 +27,8 @@ def predict_wordfile(filename, model, dictionary):
     raise ValueError('Not implemented...')
 
 
-def character_recognition(img, text_probability, dictionary, model):
+def character_recognition(img, text_probability, dictionary, model,
+                          threshold=config.TEXT_RECOGNITION_THRESHOLD):
     '''
     Calculates the texts in an img
     :img: The original image
@@ -38,11 +39,12 @@ def character_recognition(img, text_probability, dictionary, model):
     '''
     texts = []
     for bbox in bounding_boxes(text_probability,
-                               config.TEXT_RECOGNITION_THRESHOLD):
+                               threshold):
         logging.info('Start predicting bbox')
         # TODO tweak 3 (step_size)
         characters, probabilities = \
-            predict_bbox(img, text_probability, bbox, dictionary, model, 4)
+            predict_bbox(img, text_probability, bbox, dictionary, model, 4,
+                         threshold)
         texts.append({'x': bbox[1], 'y': bbox[0],
                       'characters': characters,
                       'probabilities': probabilities})
@@ -88,10 +90,10 @@ def bounding_boxes(img, threshold):
 
 
 def bbox_windows(img, text_probability, bbox, model, step_size=1, size=32,
-                 probability_threshold=config.BOUNDING_BOX_THRESHOLD):
+                 threshold=config.TEXT_RECOGNITION_THRESHOLD):
     '''
     Yields all bounding boxes with  high enough text text_probability
-    :probability_threshold: defines the necesarry some of probabilties for the
+    :threshold: defines the necesarry some of probabilties for the
     window to be yielded
     :return: yields (y,x, window) tuples
     '''
@@ -104,7 +106,7 @@ def bbox_windows(img, text_probability, bbox, model, step_size=1, size=32,
     for y in range(bbox[0], bbox[2]-31, step_size):
         for x in range(bbox[1], bbox[3]-31, step_size):
             window = img[y:y+32, x:x+32]
-            if text_probability[y:y+32, x:x+32].sum() > probability_threshold:
+            if text_probability[y:y+32, x:x+32].sum() > threshold*32*32*0.9:
                 yields += 1
                 yield y-bbox[0], x-bbox[1], window, model
             else:
@@ -116,20 +118,23 @@ def predict_window(args):
     y, x, window, model = args
     features = get_features_for_window(cut_character(window))[1].reshape(1, -1)
 
-    score = max(model.decision_function(features)[0])
+    score = model.predict_proba(features).max()
 
     prediction = model.predict(features)[0]
 
     return y, x, prediction, score
 
 
-def predict_bbox(img, text_probability, bbox, dictionary, model, step_size=1):
+def predict_bbox(img, text_probability, bbox, dictionary, model, step_size=1,
+                 threshold=config.TEXT_RECOGNITION_THRESHOLD):
     '''
     predict all characters in a bbox
     '''
 
     character_probabilities = np.zeros((bbox[2]-bbox[0], bbox[3]-bbox[1]))
-    characters = np.chararray((bbox[2]-bbox[0], bbox[3]-bbox[1]))
+    # characters = np.ndarray(shape=(bbox[2]-bbox[0], bbox[3]-bbox[1]),
+    #                         dtype='|S1')
+    characters = [[''] * (bbox[3]-bbox[1]) for _ in range(bbox[2]-bbox[0])]
 
     pool = Pool(processes=8)
     i = 0
@@ -138,12 +143,13 @@ def predict_bbox(img, text_probability, bbox, dictionary, model, step_size=1):
                                                           text_probability,
                                                           bbox,
                                                           model,
-                                                          step_size),
+                                                          step_size,
+                                                          threshold=threshold),
                                              8):
         try:
-            characters[y, x] = prediction
+            characters[y][x] = prediction
         except UnicodeEncodeError:
-            pass
+            print('error: {}'.format(prediction))
         else:
             character_probabilities[y, x] = score
 
@@ -152,7 +158,7 @@ def predict_bbox(img, text_probability, bbox, dictionary, model, step_size=1):
                          format(i, (bbox[2]-bbox[0]-31)*(bbox[3]-bbox[1]-31)))
         i += 1
 
-    return characters, character_probabilities
+    return np.array(characters), character_probabilities
 
     # TODO now filter the responses..
     # vertical_maxima = \

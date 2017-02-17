@@ -304,7 +304,9 @@ if __name__ == "__main__":
     c_matrix = sklearn.metrics.confusion_matrix(test_labels,
                                                 predicted_labels,
                                                 label_set)
-    print('F1 Score: {}'.format(f1_score(test_labels, predicted_labels)))
+    print('F1 Score: {}'.format(f1_score(test_labels,
+                                         predicted_labels,
+                                         average='macro')))
 
 
     logging.info('Saving confusion matrix')

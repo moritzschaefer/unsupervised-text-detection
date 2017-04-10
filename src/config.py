@@ -23,7 +23,7 @@ NUM_D = 1000  # number of dictionary entries
 
 
 # the thresholds depend on STEP_SIZE
-STEP_SIZE = 2
+STEP_SIZE = 4
 TEXT_RECOGNITION_THRESHOLD = 36*4/STEP_SIZE
 
 RESIZE_WORDS_FOR_DIC = True

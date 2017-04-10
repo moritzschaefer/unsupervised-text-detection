@@ -1,5 +1,5 @@
 """
-this codes trains, saves and loads a text recognition model
+Trains, saves and loads text recognition models
 """
 import pickle
 import glob
@@ -15,12 +15,10 @@ from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import learning_curve
-#test
-from sklearn.linear_model import LogisticRegression
 from sklearn.calibration import CalibratedClassifierCV
 
 logging.basicConfig(level=logging.INFO)
+
 
 # load previously build model
 def load_tr_model(path):
@@ -81,21 +79,19 @@ def train_tr_model(X, y, verbose=0):
     cv = ShuffleSplit(n_splits=5, test_size=0.2, random_state=7)
 
     # paramgrid
-    param_grid=[{'C': [2**x for x in config.C_RANGE]}]
+    param_grid = [{'C': [2**x for x in config.C_RANGE]}]
 
     # model
     model = svm.LinearSVC()
-    #@TODO: Test other models:
-    #model = LogisticRegression(solver='sag')
-    # http://stackoverflow.com/questions/26478000/converting-linearsvcs-decision-function-to-probabilities-scikit-learn-python
 
     # gridsearch
     start = time.time()
-    classifier = GridSearchCV(estimator=model, cv=cv, param_grid=param_grid, refit=True, verbose=3, n_jobs=1)
+    classifier = GridSearchCV(estimator=model, cv=cv, param_grid=param_grid,
+                              refit=True, verbose=3, n_jobs=1)
     classifier.fit(X_train, y_train)
     end = time.time()
 
-    logging.info("GridSearch done, time: {t}s".format(t = end - start))
+    logging.info("GridSearch done, time: {t}s".format(t=end - start))
 
     best_C = classifier.best_params_['C']
 
@@ -103,7 +99,6 @@ def train_tr_model(X, y, verbose=0):
     model.fit(X_train, y_train)
 
     logging.info("Prediction score: {}".format(model.score(X_test, y_test)))
-    #print(model.predict_proba(X_test))
 
     return model
 

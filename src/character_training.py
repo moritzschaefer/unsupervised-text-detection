@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+'''
+@author moritzs
+'''
 import os
 import pickle
 import xml.etree.ElementTree as ET
@@ -15,7 +18,6 @@ from sklearn.metrics import f1_score
 import sklearn
 from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection import GridSearchCV
-#test
 from sklearn.calibration import CalibratedClassifierCV
 
 from feature_extraction import get_features_for_window

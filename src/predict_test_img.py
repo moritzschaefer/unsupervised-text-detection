@@ -1,5 +1,19 @@
 #!/usr/bin/env python3
 
+'''
+This is the central main file combining all the prediction functionality.
+It fetches images from config.TEST_IMAGE_PATH and predicts the parts with text
+contained and the characters contained.
+TODO: integrate better character_recognition from notebook
+TODO2: save outputs as: for each input image
+  - One json containing coordinates of text regions and recognized characters
+  (along with positions and sizes)
+  - The original image (png) overlayed with bounding boxes of detected text and
+  printed recognized characters
+  - npy of text detection
+  - npy of character recognition
+'''
+
 import os
 from multiprocessing.pool import Pool
 import pickle
@@ -17,8 +31,11 @@ from character_recognition import character_recognition
 
 logging.basicConfig(level=logging.INFO)
 
-# get all windows of a image
+
 def sliding_window(img, model, step_size=1):
+    '''
+    Yield all windows in  an image
+    '''
     for y in range(0, img.shape[0]-32, step_size):
         for x in range(0, img.shape[1]-32, step_size):
             yield (x,
@@ -44,8 +61,9 @@ def async_predict(args):
 
 def get_prediction_values(img, model, step_size=1):
     '''
-    Calculate the text text_recognition probabilities for each pixel for each
+    Calculate the text_recognition probabilities for each pixel for each
     layer
+    :return: A list of tuples (img with layer dimensions, prediction values)
     '''
     layers = []
     for i, layer_img in enumerate(get_all_layers(img)):
@@ -63,9 +81,11 @@ def get_prediction_values(img, model, step_size=1):
 
             if (pixel_counter) % 100 == 0:
                 logging.info("pixel_counter: {}/{} from layer {}".
-                format(pixel_counter,
-                       ((layer_img.shape[0] - 31) *(layer_img.shape[1] - 31))//step_size**2,
-                       i))
+                             format(pixel_counter,
+                                    ((layer_img.shape[0] - 31) *
+                                     (layer_img.shape[1] - 31)) //
+                                    step_size**2,
+                                    i))
             pixel_counter += 1
         pool.close()
         pool.join()
@@ -87,16 +107,20 @@ def get_all_layers(img):
 
 
 def predict_images(step_size=1, plot=True, character=True):
+    '''
+    Predict all images in config.TEST_IMAGE_PATH
+    Save the predictions in data/test_images/test_set/
+    '''
     text_model = pickle.load(open(config.TEXT_MODEL_PATH, 'rb'))  # get model
     if character:
         character_model = load_model()
     dictionary = np.load(config.DICT_PATH)  # get dictionary
     image_files = glob.glob(os.path.join(config.TEST_IMAGE_PATH, '*.png'))
-    #image_files = [os.path.join(config.TEST_IMAGE_PATH, 'test1.png')]
 
     for filename in image_files:
         img = cv2.imread(filename)
-        logging.info('started computation for img {}'.format(filename.split('/')[-1].split('.')[0]))
+        logging.info('started computation for img {}'.
+                     format(filename.split('/')[-1].split('.')[0]))
 
         predicted_layers = get_prediction_values(img, text_model, step_size)
         for layer_img, layer_predictions in predicted_layers:
@@ -107,16 +131,15 @@ def predict_images(step_size=1, plot=True, character=True):
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
 
-
             np.save('../data/test_images/test_set/{}_prediction.npy'.format(
-                            filename.split('/')[-1].split('.')[0]),
-                                                layer_predictions)
+                filename.split('/')[-1].split('.')[0]),
+                layer_predictions)
 
             if character:
                 print('Calculate Characters for layer {}'.format(
                                           layer_img.shape))
                 texts = character_recognition(layer_img, layer_predictions,
-                                          dictionary, character_model)
+                                              dictionary, character_model)
 
                 print(texts)
         # combine_probability_layers(img, predicted_layers)

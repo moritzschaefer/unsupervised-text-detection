@@ -6,7 +6,6 @@ import glob
 import logging
 
 import numpy as np
-import cv2
 
 import config
 import preprocessing
@@ -64,14 +63,11 @@ def average_clusters(X, assignments, magnitudes):
 
 
 def calc_objective(X, D, assignments, magnitudes):
+    '''
+    Take the L2 norm of the deviation between X and the clusters and their
+    assigned elements in the dataset
+    '''
 
-    # THIS DOESN'T WORK (L1 norms squared summed)
-    # 1. differences of clusters to Xes
-    # 2. L1-norm for each datapoint
-    # 3. square the norms
-    # 4. sum the squares
-
-    # L2 norm sums work!
     return np.sum((np.sum(((D[:, assignments] * magnitudes) - X)**2, axis=0)))
 
 
@@ -81,6 +77,7 @@ def optimize_dictionary(save=True):
     error = 100000000
     last_error = error + 1
 
+    # optimize until error improvement smaller than the threshold
     while last_error-error > 0.1:
         last_error = error
 

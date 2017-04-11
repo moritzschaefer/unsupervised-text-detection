@@ -27,7 +27,7 @@ from skimage.transform import pyramid_gaussian
 from character_training import load_model
 import feature_extraction
 import config
-from character_recognition import character_recognition
+from character_recognition import character_recognition, filter_good_characters
 
 logging.basicConfig(level=logging.INFO)
 
@@ -97,9 +97,10 @@ def get_prediction_values(img, model, step_size=1):
 
 # return all Scaling image of a Image,save into Layer Matrix
 def get_all_layers(img):
-    for (i, resized) in enumerate(pyramid_gaussian(img,
-                                                   downscale=1.3,
-                                                   max_layer=0)):  # TODO use 7
+    for (i, resized) in enumerate(
+        pyramid_gaussian(img,
+                         downscale=config.LAYER_DOWNSCALE,
+                         max_layer=config.NUM_LAYERS)):
         # if the image is too small, break from the loop
         if resized.shape[0] < 32 or resized.shape[1] < 32:
             break
@@ -123,6 +124,7 @@ def predict_images(step_size=1, plot=True, character=True):
                      format(filename.split('/')[-1].split('.')[0]))
 
         predicted_layers = get_prediction_values(img, text_model, step_size)
+        texts = []
         for layer_img, layer_predictions in predicted_layers:
             # compute
             if plot:
@@ -137,11 +139,14 @@ def predict_images(step_size=1, plot=True, character=True):
 
             if character:
                 print('Calculate Characters for layer {}'.format(
-                                          layer_img.shape))
-                texts = character_recognition(layer_img, layer_predictions,
-                                              dictionary, character_model)
+                    layer_img.shape))
+                layer_texts = character_recognition(layer_img,
+                                                    layer_predictions,
+                                                    dictionary,
+                                                    character_model)
 
-                print(texts)
+                texts.extend(filter_good_characters(layer_texts))
+
         # combine_probability_layers(img, predicted_layers)
 
 

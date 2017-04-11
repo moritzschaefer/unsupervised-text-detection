@@ -20,11 +20,43 @@ import config
 logging.basicConfig(level=logging.INFO)
 
 
-def predict_wordfile(filename, model, dictionary):
-    '''
-    Load a file and predict the whole image as word
-    '''
-    raise ValueError('Not implemented...')
+def filter_good_characters(texts):
+    for text in texts:
+        probabilities = text['probabilities'].copy()
+        characters=texts[0]['characters'].copy()
+
+        # delete zeros (if stepsize > 1)
+        probabilities=probabilities[~np.all(probabilities == 0, axis=1)]
+        probabilities=probabilities[:,~np.all(probabilities == 0, axis=0)]
+        characters=characters[~np.all(characters == '', axis=1)]
+        characters=characters[:,~np.all(characters == '', axis=0)]
+
+        for y, x in np.ndindex(*characters.shape):
+            if probabilities[y,x] < 0.6:
+                characters[y,x] = ''
+            if characters[y-1,x] == characters[y,x]:
+                characters[y,x] = ''
+            if characters[y,x-1] == characters[y,x]:
+                characters[y,x] = ''
+
+        # half of a window size gap between characters
+        gap_size = 16/config.STEP_SIZE
+        text['filtered'] = []
+
+        # make sure there are only text lines with minimum gap of gap_size
+        for y in range(characters.shape[0]):
+            horizontal_character_counts = np.sum(characters!='', axis=1)
+
+            if max(horizontal_character_counts[max(0,y-gap_size):
+                                               min(characters.shape[0]-1,
+                                                   y+gap_size)]) == \
+                    horizontal_character_counts[y]:
+                # TODO check horizontal gaps
+                #
+                # TODO simply add the text from line y as list of dicts with
+                # positions and character and size
+                text['filtered'].append()
+
 
 
 def character_recognition(img, text_probability, dictionary, model,
@@ -35,15 +67,14 @@ def character_recognition(img, text_probability, dictionary, model,
     :text_probability: The text recognition probability image. pixels
     should be probablities in range [0,1]. has dimension img.shape - (31,31)
     :return: A list of dictionaries, each containing position and text
-
     '''
     texts = []
     for bbox in bounding_boxes(text_probability,
                                threshold):
         logging.info('Start predicting bbox')
-        # TODO tweak 3 (step_size)
         characters, probabilities = \
-            predict_bbox(img, text_probability, bbox, dictionary, model, 4,
+            predict_bbox(img, text_probability, bbox, dictionary, model,
+                         config.STEP_SIZE,
                          threshold)
         texts.append({'x': bbox[1], 'y': bbox[0],
                       'characters': characters,

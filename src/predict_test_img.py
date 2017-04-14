@@ -68,12 +68,14 @@ def get_prediction_values(img, model, step_size=1):
     layers = []
     for i, layer_img in enumerate(get_all_layers(img)):
         pool = Pool(processes=8)
-        values = np.zeros(shape=[layer_img.shape[0], layer_img.shape[1]],
+        padded_img = cv2.copyMakeBorders(layer_img, 32, 32, 32, 32,
+                                         cv2.BORDER_REFLECT)
+        values = np.zeros(shape=[padded_img.shape[0], padded_img.shape[1]],
                           dtype='float')
         pixel_counter = 0
         logging.info('started for layer {}'.format(i))
         for x, y, v in pool.imap(async_predict,
-                                 sliding_window(layer_img.astype('float32'),
+                                 sliding_window(padded_img.astype('float32'),
                                                 model,
                                                 step_size),
                                  8):
@@ -82,15 +84,15 @@ def get_prediction_values(img, model, step_size=1):
             if (pixel_counter) % 100 == 0:
                 logging.info("pixel_counter: {}/{} from layer {}".
                              format(pixel_counter,
-                                    ((layer_img.shape[0] - 31) *
-                                     (layer_img.shape[1] - 31)) //
+                                    ((padded_img.shape[0] - 31) *
+                                     (padded_img.shape[1] - 31)) //
                                     step_size**2,
                                     i))
             pixel_counter += 1
         pool.close()
         pool.join()
 
-        layers.append((layer_img.astype('float32'), values))
+        layers.append((layer_img.astype('float32')[32:-32,32:-32], values))
         logging.info('finished layer {}'.format(i))
     return layers
 
@@ -134,7 +136,7 @@ def predict_images(step_size=1, plot=True, character=True):
                 cv2.destroyAllWindows()
 
             np.save('{}/{}_layer_{}_prediction.npy'.format(
-                config.TEST_IMAGE_PATH
+                config.TEST_IMAGE_PATH,
                 filename.split('/')[-1].split('.')[0], layer),
                 layer_predictions)
 
@@ -148,7 +150,7 @@ def predict_images(step_size=1, plot=True, character=True):
                 texts.extend(filter_good_characters(layer_texts, layer))
         if texts:
             pickle.dump(texts, open('/{}_character_predictions.pkl'.format(
-                TEST_IMAGE_PATH
+                TEST_IMAGE_PATH,
                 filename.split('/')[-1].split('.')[0]), 'w'))
 
         # combine_probability_layers(img, predicted_layers)

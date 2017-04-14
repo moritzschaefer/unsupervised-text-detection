@@ -149,7 +149,16 @@ def bbox_windows(img, text_probability, bbox, model, step_size=1, size=32,
 
 def predict_window(args):
     y, x, window, model = args
-    features = get_features_for_window(cut_character(window))[1].reshape(1, -1)
+    try:
+        features = get_features_for_window(cut_character(window))[1]
+        features = features.reshape(1, -1)
+    except AttributeError:
+        logging.warn(
+            'get_features_for_window for position {},{} returned {}'.
+            format(x, y, features)
+        )
+
+        return y, x, '', 0
 
     score = model.predict_proba(features).max()
 

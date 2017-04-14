@@ -107,6 +107,7 @@ def cut_character(window):
 
     x1 = ((32-canny.sum(axis=0))*gauss)[:16].argmax()
     x2 = ((32-canny.sum(axis=0))*gauss)[16:].argmax()+16
+
     window = np.copy(window)
     window[:, :x1] = 0
     window[:, x2:] = 0
@@ -150,14 +151,23 @@ def bbox_windows(img, text_probability, bbox, model, step_size=1, size=32,
 def predict_window(args):
     y, x, window, model = args
     try:
-        features = get_features_for_window(cut_character(window))[1]
-        features = features.reshape(1, -1)
-    except AttributeError:
+        cut_window = cut_character(window)
+    except ValueError:
         logging.warn(
-            'get_features_for_window for position {},{} returned {}'.
-            format(x, y, features)
+            'cut_character failed for position {},{}. window shape {}'.
+            format(x, y, window.shape)
         )
 
+        return y, x, '', 0
+
+    features = get_features_for_window(cut_window)
+    if features[0]:
+        features = features[1].reshape(1, -1)
+    else:
+        logging.warn(
+            'get_features_for_window for position {},{} returned {}.'.
+            format(x, y, features[1])
+        )
         return y, x, '', 0
 
     score = model.predict_proba(features).max()
@@ -172,6 +182,9 @@ def predict_bbox(img, text_probability, bbox, dictionary, model, step_size=1,
     '''
     predict all characters in a bbox
     '''
+    logging.debug('Predicting bbox of size {}x{} at {},{}'.format(
+        bbox[2]-bbox[0], bbox[3]-bbox[1], bbox[0], bbox[1]
+    ))
 
     character_probabilities = np.zeros((bbox[2]-bbox[0], bbox[3]-bbox[1]))
     # characters = np.ndarray(shape=(bbox[2]-bbox[0], bbox[3]-bbox[1]),

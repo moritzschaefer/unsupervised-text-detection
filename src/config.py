@@ -22,7 +22,7 @@ ALPHA = .5  # hyperparam from feature extraction #TODO tune this in crossval
 NUM_D = 1000  # number of dictionary entries
 
 LAYER_DOWNSCALE=1.5
-NUM_LAYERS=2
+NUM_LAYERS=0
 # the thresholds depend on STEP_SIZE
 STEP_SIZE = 4
 TEXT_RECOGNITION_THRESHOLD = 36*4/STEP_SIZE

@@ -69,7 +69,7 @@ def get_prediction_values(img, model, step_size=1):
     for i, layer_img in enumerate(get_all_layers(img)):
         pool = Pool(processes=8)
         padded_img = cv2.copyMakeBorder(layer_img, 32, 32, 32, 32,
-                                         cv2.BORDER_REFLECT)
+                                        cv2.BORDER_REFLECT)
         values = np.zeros(shape=[padded_img.shape[0], padded_img.shape[1]],
                           dtype='float')
         pixel_counter = 0

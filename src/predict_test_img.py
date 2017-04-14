@@ -68,7 +68,7 @@ def get_prediction_values(img, model, step_size=1):
     layers = []
     for i, layer_img in enumerate(get_all_layers(img)):
         pool = Pool(processes=8)
-        padded_img = cv2.copyMakeBorders(layer_img, 32, 32, 32, 32,
+        padded_img = cv2.copyMakeBorder(layer_img, 32, 32, 32, 32,
                                          cv2.BORDER_REFLECT)
         values = np.zeros(shape=[padded_img.shape[0], padded_img.shape[1]],
                           dtype='float')
@@ -149,8 +149,8 @@ def predict_images(step_size=1, plot=True, character=True):
                                                     character_model)
                 texts.extend(filter_good_characters(layer_texts, layer))
         if texts:
-            pickle.dump(texts, open('/{}_character_predictions.pkl'.format(
-                TEST_IMAGE_PATH,
+            pickle.dump(texts, open('{}/{}_character_predictions.pkl'.format(
+                config.TEST_IMAGE_PATH,
                 filename.split('/')[-1].split('.')[0]), 'w'))
 
         # combine_probability_layers(img, predicted_layers)
@@ -187,4 +187,4 @@ def combine_probability_layers(img, layers):
     return text_probability_image
 
 if __name__ == "__main__":
-    predict_images(config.STEP_SIZE, plot=False, character=False)
+    predict_images(config.STEP_SIZE, plot=False, character=True)

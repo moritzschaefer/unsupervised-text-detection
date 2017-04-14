@@ -21,7 +21,6 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.calibration import CalibratedClassifierCV
 
 from feature_extraction import get_features_for_window
-from plot_confusion_matrix import plot_confusion_matrix
 import config
 
 logging.basicConfig(level=logging.INFO)
@@ -319,6 +318,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         import matplotlib.pyplot as plt
         plt.figure()
+        from plot_confusion_matrix import plot_confusion_matrix
         plot_confusion_matrix(c_matrix, classes=label_set,
                               title='Confusion matrix, without normalization')
         plt.show()

@@ -182,7 +182,7 @@ def predict_bbox(img, text_probability, bbox, dictionary, model, step_size=1,
     '''
     predict all characters in a bbox
     '''
-    logging.debug('Predicting bbox of size {}x{} at {},{}'.format(
+    logging.info('Predicting bbox of size {}x{} at {},{}'.format(
         bbox[2]-bbox[0], bbox[3]-bbox[1], bbox[0], bbox[1]
     ))
 

@@ -20,10 +20,10 @@ import config
 logging.basicConfig(level=logging.INFO)
 
 
-def filter_good_characters(texts):
+def filter_good_characters(texts, layer):
     for text in texts:
         probabilities = text['probabilities'].copy()
-        characters=texts[0]['characters'].copy()
+        characters=text['characters'].copy()
 
         # delete zeros (if stepsize > 1)
         probabilities=probabilities[~np.all(probabilities == 0, axis=1)]
@@ -44,18 +44,20 @@ def filter_good_characters(texts):
         text['filtered'] = []
 
         # make sure there are only text lines with minimum gap of gap_size
+        horizontal_character_counts = np.sum(characters!='', axis=1)
         for y in range(characters.shape[0]):
-            horizontal_character_counts = np.sum(characters!='', axis=1)
 
             if max(horizontal_character_counts[max(0,y-gap_size):
                                                min(characters.shape[0]-1,
                                                    y+gap_size)]) == \
                     horizontal_character_counts[y]:
+                for character in (characters[y,:]):
+                    # TODO add x position and charsize
+                    text['filtered'].append({'layer': layer, 'y': y, 'character': character})
+
                 # TODO check horizontal gaps
-                #
-                # TODO simply add the text from line y as list of dicts with
-                # positions and character and size
-                text['filtered'].append()
+
+    return texts
 
 
 

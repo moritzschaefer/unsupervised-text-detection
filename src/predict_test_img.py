@@ -110,7 +110,7 @@ def get_all_layers(img):
 def predict_images(step_size=1, plot=True, character=True):
     '''
     Predict all images in config.TEST_IMAGE_PATH
-    Save the predictions in data/test_images/test_set/
+    Save the predictions in TEST_IMAGE_PATH
     '''
     text_model = pickle.load(open(config.TEXT_MODEL_PATH, 'rb'))  # get model
     if character:
@@ -125,7 +125,7 @@ def predict_images(step_size=1, plot=True, character=True):
 
         predicted_layers = get_prediction_values(img, text_model, step_size)
         texts = []
-        for layer_img, layer_predictions in predicted_layers:
+        for layer, (layer_img, layer_predictions) in enumerate(predicted_layers):
             # compute
             if plot:
                 cv2.imshow("image 1", layer_img)
@@ -133,8 +133,9 @@ def predict_images(step_size=1, plot=True, character=True):
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
 
-            np.save('../data/test_images/test_set/{}_prediction.npy'.format(
-                filename.split('/')[-1].split('.')[0]),
+            np.save('{}/{}_layer_{}_prediction.npy'.format(
+                config.TEST_IMAGE_PATH
+                filename.split('/')[-1].split('.')[0], layer),
                 layer_predictions)
 
             if character:
@@ -144,8 +145,11 @@ def predict_images(step_size=1, plot=True, character=True):
                                                     layer_predictions,
                                                     dictionary,
                                                     character_model)
-
-                texts.extend(filter_good_characters(layer_texts))
+                texts.extend(filter_good_characters(layer_texts, layer))
+        if texts:
+            pickle.dump(texts, open('/{}_character_predictions.pkl'.format(
+                TEST_IMAGE_PATH
+                filename.split('/')[-1].split('.')[0]), 'w'))
 
         # combine_probability_layers(img, predicted_layers)
 

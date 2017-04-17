@@ -92,7 +92,7 @@ def get_prediction_values(img, model, step_size=1):
         pool.close()
         pool.join()
 
-        layers.append((layer_img.astype('float32')[32:-32,32:-32], values))
+        layers.append((layer_img.astype('float32'), values[32:-32, 32:-32]))
         logging.info('finished layer {}'.format(i))
     return layers
 
@@ -127,7 +127,8 @@ def predict_images(step_size=1, plot=True, character=True):
 
         predicted_layers = get_prediction_values(img, text_model, step_size)
         texts = []
-        for layer, (layer_img, layer_predictions) in enumerate(predicted_layers):
+        for layer, (layer_img, layer_predictions) in \
+                enumerate(predicted_layers):
             # compute
             if plot:
                 cv2.imshow("image 1", layer_img)
@@ -151,7 +152,7 @@ def predict_images(step_size=1, plot=True, character=True):
         if texts:
             pickle.dump(texts, open('{}/{}_character_predictions.pkl'.format(
                 config.TEST_IMAGE_PATH,
-                filename.split('/')[-1].split('.')[0]), 'w'))
+                filename.split('/')[-1].split('.')[0]), 'wb'))
 
         # combine_probability_layers(img, predicted_layers)
 
